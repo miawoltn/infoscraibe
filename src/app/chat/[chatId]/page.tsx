@@ -1,8 +1,8 @@
 
 
-import ChatComponent from '@/components/ui/ChatComponent';
-import ChatSideBar from '@/components/ui/ChatSideBar';
-import PDFViewer from '@/components/ui/PDFViewer';
+import ChatComponent from '@/components/ChatComponent';
+import ChatSideBar from '@/components/ChatSideBar';
+import PDFViewer from '@/components/PDFViewer';
 import { db } from '@/lib/db';
 import { chats } from '@/lib/db/schema';
 import { auth } from '@clerk/nextjs';
@@ -46,7 +46,7 @@ const ChatPage = async ({ params: { chatId } }: Props) => {
 
                 {/* chat component */}
                 <div className='flex-[3] border-1-4 border-1-slate-200'>
-
+                    <ChatComponent />
                 </div>
             </div>
         </div>

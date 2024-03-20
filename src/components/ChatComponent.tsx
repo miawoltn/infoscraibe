@@ -1,21 +1,36 @@
 'use client'
 import { DrizzleChat } from '@/lib/db/schema'
 import Link from 'next/link'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Button } from './button'
 import { PlusCircle, Send } from 'lucide-react'
 import { Input } from './ui/input'
 import { useChat } from 'ai/react'
 import MessageList from './MessageList'
 
-type Props = {};
+type Props = {
+  chatId: number
+};
 
-const ChatComponent = ({ }: Props) => {
+const ChatComponent = ({ chatId }: Props) => {
   const { input, handleInputChange, handleSubmit, messages } = useChat({
-    api: '/api/chat'
+    api: '/api/chat',
+    body: { chatId }
   });
+
+  useEffect(() => {
+    const messageContainer = document.getElementById('message-container');
+    if(messageContainer) {
+      messageContainer.scrollTo({
+        top: messageContainer.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  
+  }, [messages])
+  
   return (
-    <div className='relative max-h-screen overflow-scroll'>
+    <div className='relative max-h-screen overflow-scroll' id='message-container'>
       <div className='sticky top-0 inset-x-0 p-2 bg-white h-fit'>
         <h3 className='text-xl font-bold'>Chat</h3>
       </div>
@@ -24,10 +39,10 @@ const ChatComponent = ({ }: Props) => {
 
       <form onSubmit={handleSubmit} className='sticky bottom-0 inset-x-0 px-2 py-4 bg-white'>
         <div className="flex">
-        <Input value={input} onChange={handleInputChange} placeholder='Ask any question...' className='w-full' />
-        <Button className='bg-blue-800 ml-2'>
-          <Send className='h-4 w-4' />
-        </Button>
+          <Input value={input} onChange={handleInputChange} placeholder='Ask any question...' className='w-full' />
+          <Button className='bg-blue-800 ml-2'>
+            <Send className='h-4 w-4' />
+          </Button>
         </div>
       </form>
     </div>

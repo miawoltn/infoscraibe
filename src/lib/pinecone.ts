@@ -1,8 +1,7 @@
 
 import { Pinecone, PineconeRecord } from '@pinecone-database/pinecone'
 import { downloadFromS3 } from './s3';
-import { PDFLoader } from 'langchain/document_loaders/fs/pdf'
-import { writeFile, writeFileSync } from 'fs';
+import { WebPDFLoader } from "langchain/document_loaders/web/pdf";
 import { Document, RecursiveCharacterTextSplitter } from '@pinecone-database/doc-splitter'
 import { getEmbeddings } from './embeddings';
 import md5 from 'md5';
@@ -28,18 +27,18 @@ export const getPineconeClient = async () => {
     return pinecone;
 }
 
+export const chatPdfIndex = async () => {
+    return (await getPineconeClient()).index('chatpdf');
+}
+
 export async function loadS3IntoPinecone(fileKey: string) {
     try {
         // get file pdf from s3
         const pdfBase64 = await downloadFromS3(fileKey);
-        const file_name = `/tmp/pdf-${Date.now().toString()}.pdf`;
-        writeFile(file_name, pdfBase64!, 'base64', function (err: any) {
-            if (err) throw err;
-            else console.log("file write succussful")
-        });
 
         // load the pdf
-        const pdfReader = new PDFLoader(file_name);
+        const blob = new Blob([Buffer.from(pdfBase64!!, 'base64')]);
+        const pdfReader = new WebPDFLoader(blob);
         const pages = await pdfReader.load() as PDFPage[];
 
         // split and segment document

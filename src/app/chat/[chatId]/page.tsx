@@ -46,7 +46,7 @@ const ChatPage = async ({ params: { chatId } }: Props) => {
 
                 {/* chat component */}
                 <div className='flex-[3] border-1-4 border-1-slate-200'>
-                    <ChatComponent />
+                    <ChatComponent chatId={Number(chatId)} />
                 </div>
             </div>
         </div>

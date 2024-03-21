@@ -1,9 +1,10 @@
 // import { Configuration, OpenAIApi } from 'openai-edge'
 import { Message, OpenAIStream, StreamingTextResponse } from 'ai'
 import { NextResponse } from 'next/server';
-import { getChatById } from '@/lib/db';
+import { db, getChatById } from '@/lib/db';
 import { getContext } from '@/lib/context';
 import { openai } from '@/lib/openai';
+import { messages as msgs } from '@/lib/db/schema';
 
 // export const runtime = 'edge';
 
@@ -38,7 +39,14 @@ export async function POST(req: Request) {
             messages: [prompt, ...messages.filter((message: Message) => message.role === 'user')],
             stream: true
         });
-        const stream = OpenAIStream(response);
+        const stream = OpenAIStream(response,  {
+            onStart: async () => {
+                await db.insert(msgs).values({ chatId, content: lastMessage.content, role: 'user' });
+            },
+            onCompletion: async (completion: string) => {
+                await db.insert(msgs).values({ chatId, content: completion, role: 'system'})
+            }
+        });
         return new StreamingTextResponse(stream);
     } catch (error) {
         console.log(error);

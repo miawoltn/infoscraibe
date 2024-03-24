@@ -1,13 +1,21 @@
 import FileUpload from "@/components/FileUpload";
+import SubscriptionButton from "@/components/SubscriptionButton";
 import { Button } from "@/components/button";
+import { getChatById, getChatByUserId } from "@/lib/db";
+import { checkSubscription } from "@/lib/subscription";
 import { UserButton, auth } from "@clerk/nextjs";
-import { LogIn } from "lucide-react";
+import { ArrowRightIcon, LogIn } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 export default async function Home() {
-  const { userId } = await auth()
-  const isAuth = !!userId
+  const { userId } = await auth();
+  const isAuth = !!userId;
+  const isPro = await checkSubscription();
+  let firstChat;
+  if(userId) {
+    firstChat = await getChatByUserId(userId);
+  }
   return (
     <div className="w-screen min-h-screen bg-gradient-to-b from-sky-400 to-sky-200">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -18,7 +26,13 @@ export default async function Home() {
           </div>
 
           <div className="flex mt-2">
-            {isAuth && <Button>Got to Chats</Button>}
+            {isAuth && firstChat && <Link href={`chat/${firstChat.id}`}>
+            <Button>Got to Chats <ArrowRightIcon className="ml-2"/></Button> </Link>}
+
+            
+            <div className="ml-3">
+              <SubscriptionButton isPro={isPro} />
+            </div>
           </div>
 
           <p className="max-w-xl mt-1 text-lg text-slate-600">

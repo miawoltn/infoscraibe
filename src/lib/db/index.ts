@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless"
+import { NeonQueryFunction, neon } from "@neondatabase/serverless"
 import { drizzle } from "drizzle-orm/neon-http"
 import { UserSubscription, chats, messages, userSubscriptions } from "./schema"
 import { eq } from "drizzle-orm"
@@ -8,11 +8,13 @@ if(!process.env.DATABASE_URL) {
     throw new Error("databse url not found")
 }
 
-const sql = neon(process.env.DATABASE_URL)
+const sql: NeonQueryFunction<boolean, boolean> = neon(process.env.DATABASE_URL)
 
 export const db = drizzle(sql)
 
 export const getChatById = async (chatId: number) => (await db.select().from(chats).where(eq(chats.id, chatId)))[0];
+
+export const getChatsByUserId = async (userId: string) => (await db.select().from(chats).where(eq(chats.userId, userId)));
 
 export const getChatByUserId = async (userId: string) => (await db.select().from(chats).where(eq(chats.userId, userId)))[0];
 

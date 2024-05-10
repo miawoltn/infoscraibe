@@ -2,7 +2,7 @@
 import { DrizzleChat } from '@/lib/db/schema'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
-import { Button } from './button'
+import { Button } from './ui/button'
 import { PlusCircle, Send } from 'lucide-react'
 import { Input } from './ui/input'
 import { useChat } from 'ai/react'

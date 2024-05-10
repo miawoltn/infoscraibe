@@ -11,7 +11,7 @@ export const GET = async () => {
         const user = await currentUser();
 
         if(!userId) {
-            return new NextResponse('unauthorized', { status: 401});
+            return new NextResponse('unauthorized', { status: 401 });
         }
 
         const sub = await getSubscriptionByUserId(userId);

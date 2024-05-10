@@ -1,10 +1,11 @@
 // import { Configuration, OpenAIApi } from 'openai-edge'
 import { Message, OpenAIStream, StreamingTextResponse } from 'ai'
 import { NextResponse } from 'next/server';
-import { db, getChatById } from '@/lib/db';
+import { db, getChatById, getChatsByUserId } from '@/lib/db';
 import { getContext } from '@/lib/context';
 import { openai } from '@/lib/openai';
 import { messages as msgs } from '@/lib/db/schema';
+import { auth } from '@clerk/nextjs';
 
 // export const runtime = 'edge';
 
@@ -55,4 +56,14 @@ export async function POST(req: Request) {
             { status: 500 }
         )
     }
+}
+
+export async function GET(req: Request) {
+    const { userId } = auth()
+    if (!userId) {
+        return NextResponse.json({ error: 'unauthorised' }, { status: 401 })
+    }
+
+    const chats = await getChatsByUserId(userId);
+    return NextResponse.json(chats);
 }

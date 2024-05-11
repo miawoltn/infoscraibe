@@ -1,7 +1,7 @@
 import { NeonQueryFunction, neon } from "@neondatabase/serverless"
 import { drizzle } from "drizzle-orm/neon-http"
 import { UserSubscription, chats, messages, userSubscriptions } from "./schema"
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 
 
 if(!process.env.DATABASE_URL) {
@@ -17,6 +17,8 @@ export const getChatById = async (chatId: number) => (await db.select().from(cha
 export const getChatsByUserId = async (userId: string) => (await db.select().from(chats).where(eq(chats.userId, userId)));
 
 export const getChatByUserId = async (userId: string) => (await db.select().from(chats).where(eq(chats.userId, userId)))[0];
+
+export const getChatByUserIdAndChatId = async (userId: string, chatId: number) => (await db.select().from(chats).where(and(eq(chats.userId, userId), eq(chats.id, chatId))))[0];
 
 export const getMessagesByChatId = async (chatId: number) => await db.select().from(messages).where(eq(messages.chatId, chatId));
 

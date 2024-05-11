@@ -2,11 +2,12 @@ import { db } from "@/lib/db"
 import { chats } from "@/lib/db/schema"
 import { loadS3IntoPinecone } from "@/lib/pinecone"
 import { getS3Url } from "@/lib/s3"
-import { auth } from "@clerk/nextjs"
+import { auth, currentUser } from "@clerk/nextjs"
 import { NextResponse } from "next/server"
 
 export async function POST(req: Request, res: Response) {
-    const { userId } = auth()
+    const user = await currentUser()
+    const userId = user?.id;
     if (!userId) {
         return NextResponse.json({ error: 'unauthorised' }, { status: 401 })
     }

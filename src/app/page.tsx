@@ -20,7 +20,7 @@ export default async function Home() {
   }
   return (
      <>
-      <MaxWidthWrapper className='mb-12 mt-10 sm:mt-20 flex flex-col items-center justify-center text-center'>
+      <MaxWidthWrapper className='mb-12 mt-28 sm:mt-40 flex flex-col items-center justify-center text-center'>
         <h1 className='max-w-4xl text-5xl font-bold md:text-6xl lg:text-7xl'>
           <Typewriter text="Easily converse with your documents in seconds." />
         </h1>

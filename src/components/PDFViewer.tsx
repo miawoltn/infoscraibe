@@ -89,7 +89,7 @@ const PdfViewer = ({ url }: PDFViewerProps) => {
   }
 
   return (
-    <div className='w-full bg-white rounded-md shadow flex flex-col items-center'>
+    <div className='w-full h-auto bg-white rounded-md shadow flex flex-col items-center no-scrollbar'>
       <div className='h-14 w-full border-b border-zinc-200 flex items-center justify-between px-2'>
         <div className='flex items-center gap-1.5'>
           <Button
@@ -218,7 +218,7 @@ const PdfViewer = ({ url }: PDFViewerProps) => {
               className='max-h-full'
               >
 
-            <div className="overflow-y-auto overflow-x-auto max-h-screen">
+            <div className="no-scrollbar overflow-y-auto overflow-x-auto max-h-screen">
              {scroll && numPages ? 
              
               Array.from({ length: numPages }, (_, index) => index + 1).map(

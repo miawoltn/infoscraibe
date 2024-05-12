@@ -29,26 +29,8 @@ const ChatPage = async ({ params: { chatId } }: Props) => {
     const isPro = await checkSubscription();
 
     return (
-        // <div className='flex max-h-screen overflow-scroll'>
-        //     <div className='flex w-full max-h-screen overflow-scroll'>
-        //         {/* chat sidebar */}
-        //         {/* <div className='flex-[1] max-w-xs'>
-        //             <ChatSideBar chats={_chats} chatId={+userId} isPro={isPro} />
-        //         </div> */}
-
-        //         {/* pdf viewer */}
-        //         <div className='p-4 overflow-scroll flex-[5]'>
-        //             <PdfViewer url={currentChat.pdfUrl} />
-        //         </div>
-
-        //         {/* chat component */}
-        //         <div className='flex-[3] border-1-4 border-1-slate-200'>
-        //             <ChatComponent chatId={Number(chatId)} />
-        //         </div>
-        //     </div>
-        // </div>
-        <div className='flex-1 justify-between flex flex-col h-screen overscroll-none overflow-hidden'>
-            <div className='mx-auto w-full max-w-8xl grow lg:flex xl:px-2'>
+        <div className='flex-1 justify-between flex flex-col overscroll-none overflow-hidden'>
+            <div className='border-b mx-auto w-full max-w-8xl grow lg:flex xl:px-2'>
                 {/* Left sidebar & main wrapper */}
                 <div className='flex-1 xl:flex'>
                     <div className='px-4 py-6 sm:px-6 lg:pl-8 xl:flex-1 xl:pl-6'>
@@ -57,7 +39,8 @@ const ChatPage = async ({ params: { chatId } }: Props) => {
                     </div>
                 </div>
 
-                <div className='shrink-0 flex-[0.75] border-t border-gray-200 lg:w-96 lg:border-l lg:border-t-0'>
+                <div className='shrink-0 flex-[0.65] border-t border-b border-gray-200 lg:flex lg:w-96 lg:border-l lg:border-t-0 mb-1'>
+                {/* <div className='flex-1 xl:flex'> */}
                     <ChatComponent chatId={Number(chatId)} />
                 </div>
             </div>

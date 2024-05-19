@@ -59,17 +59,13 @@ const ChatComponent = ({ chatId }: Props) => {
   }, [messages])
 
   return (
-    <div className='bg-zinc-50 flex flex-col divide-y divide-zinc-20 lg:md:absolute lg:md:inset-y-0 lg:md:px-0 lg:py-1' id='message-container'>
-      {/* <div className=' flex-[0.1] items-center'>
-        <h3 className='text-xl font-bold'>Chat</h3>
-      </div> */}
+    <div className='flex flex-col h-dvh' id='message-container'>
 
-      <div className='justify-between lg:md:pt-10 mt-10 lg:md:sm:overflow-auto'>
+      <div className='overflow-auto p-4 pb-28'>
         <MessageList messages={messages} isLoading={isLoading} />
       </div>
 
-      {/* <form onSubmit={handleSubmit} className='absolute bottom-0 inset-x-0 px-2 py-4 bg-white'></form> */}
-      <form onSubmit={handleSubmit} className='bg-white shadow shadow-black-400'>
+      <form onSubmit={handleSubmit} className='fixed bottom-0 right-0 w-1/2 bg-white shadow shadow-black-400 p-1 border-t'>
         <div className="flex flex-row items-center">
           <Textarea
             ref={textareaRef}

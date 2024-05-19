@@ -29,21 +29,18 @@ const ChatPage = async ({ params: { chatId } }: Props) => {
     const isPro = await checkSubscription();
 
     return (
-        <div className='flex-1 justify-between flex flex-col overscroll-none overflow-hidden'>
-            <div className='border-b mx-auto w-full max-w-8xl grow lg:flex xl:px-2'>
+        <div className='flex flex-col md:flex-row '>
                 {/* Left sidebar & main wrapper */}
-                <div className='flex-1 xl:flex'>
+                <div className='w-full md:w-1/2 h-screen'>
                     <div className='px-4 py-6 sm:px-6 lg:pl-8 xl:flex-1 xl:pl-6'>
                         {/* Main area */}
                         <PdfViewer url={currentChat.pdfUrl} />
                     </div>
                 </div>
 
-                <div className='shrink-0 flex-[0.65] border-t border-b border-gray-200 lg:flex lg:w-96 lg:border-l lg:border-t-0 mb-1'>
-                {/* <div className='flex-1 xl:flex'> */}
+                <div className='w-full md:w-1/2 border-t border-b border-gray-200'>
                     <ChatComponent chatId={Number(chatId)} />
                 </div>
-            </div>
         </div>
     );
 };

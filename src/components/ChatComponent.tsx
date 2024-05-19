@@ -3,7 +3,7 @@ import { DrizzleChat } from '@/lib/db/schema'
 import Link from 'next/link'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button } from './ui/button'
-import { PlusCircle, Send, Loader2 } from 'lucide-react'
+import { PlusCircle, Send, Loader2, ArrowUp } from 'lucide-react'
 import { Input } from './ui/input'
 import { useChat } from 'ai/react'
 import MessageList from './MessageList'
@@ -65,20 +65,20 @@ const ChatComponent = ({ chatId }: Props) => {
         <MessageList messages={messages} isLoading={isLoading} />
       </div>
 
-      <form onSubmit={handleSubmit} className='fixed bottom-0 right-0 w-1/2 bg-white shadow shadow-black-400 p-1 border-t'>
+      <form onSubmit={handleSubmit} className='fixed bottom-0 right-0 w-1/2  p-1 grainy'>
         <div className="flex flex-row items-center">
           <Textarea
             ref={textareaRef}
             disabled={isLoading}
             rows={1}
-            autoFocus
             value={input}
+            autoFocus={false}
             onChange={handleInputChange}
             placeholder='Ask any question...'
-            className='min-h-[0] resize-none pr-12 text-base py-2 scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-0 scrolling-touch'
+            className='min-h-[0] resize-none pr-12 text-base py-2 focus:ring-1 focus-visible:ring-1'
           />
-          <Button disabled={isLoading || responding} className='bg-blue-800 ml-2' variant='secondary'>
-            <Send className='h-5 w-5' />
+          <Button disabled={isLoading || responding} className='bg-blue-800 ml-2 rounded' variant='default'>
+            <ArrowUp className='h-4 w-4' />
           </Button>
         </div>
       </form>

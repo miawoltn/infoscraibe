@@ -20,7 +20,6 @@ type Props = {
 const ChatComponent = ({ chatId }: Props) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const [responding, setResponding] = useState(false);
   const [previousMessage, setPreviousMessage] = useState('');
 
   const { data, isLoading } = useQuery({
@@ -30,7 +29,7 @@ const ChatComponent = ({ chatId }: Props) => {
       return response.data;
     }
   })
-  const { input, handleInputChange, handleSubmit, messages } = useChat({
+  const { input, handleInputChange, handleSubmit, messages, isLoading: isAithinking } = useChat({
     api: '/api/chat',
     body: { chatId },
     initialMessages: data || [],
@@ -39,12 +38,10 @@ const ChatComponent = ({ chatId }: Props) => {
     },
     onResponse: (response) => {
         console.log(response);
-        setResponding(true)
     },
     onFinish: (message) => {
       console.log(message);
-      setResponding(false)
-    }
+    },
   });
 
   useEffect(() => {
@@ -57,6 +54,8 @@ const ChatComponent = ({ chatId }: Props) => {
     }
 
   }, [messages])
+
+  const isButtonDisabled = isLoading || isAithinking || !!!input
 
   return (
     <div className='flex flex-col h-dvh' id='message-container'>
@@ -77,7 +76,7 @@ const ChatComponent = ({ chatId }: Props) => {
             placeholder='Ask any question...'
             className='min-h-[0] resize-none pr-12 text-base py-2 focus:ring-1 focus-visible:ring-1'
           />
-          <Button disabled={isLoading || responding} className='bg-blue-800 ml-2 rounded' variant='default'>
+          <Button disabled={isButtonDisabled} className='bg-blue-800 ml-2 rounded' variant='default'>
             <ArrowUp className='h-4 w-4' />
           </Button>
         </div>

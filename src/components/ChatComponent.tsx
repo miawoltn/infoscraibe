@@ -3,7 +3,7 @@ import { DrizzleChat } from '@/lib/db/schema'
 import Link from 'next/link'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button } from './ui/button'
-import { PlusCircle, Send, Loader2, ArrowUp } from 'lucide-react'
+import { PlusCircle, Send, Loader2, ArrowUp, Dot } from 'lucide-react'
 import { Input } from './ui/input'
 import { useChat } from 'ai/react'
 import MessageList from './MessageList'
@@ -12,6 +12,7 @@ import axios from 'axios'
 import { Message } from 'ai'
 import ChatInput from './ChatInput'
 import { Textarea } from './ui/textarea'
+import { cn } from '@/lib/utils'
 
 type Props = {
   chatId: number
@@ -35,12 +36,11 @@ const ChatComponent = ({ chatId }: Props) => {
     initialMessages: data || [],
     onError: (error) => {
       console.error(error)
+
     },
     onResponse: (response) => {
-        console.log(response);
     },
     onFinish: (message) => {
-      console.log(message);
     },
   });
 
@@ -58,13 +58,16 @@ const ChatComponent = ({ chatId }: Props) => {
   const isButtonDisabled = isLoading || isAithinking || !!!input
 
   return (
-    <div className='flex flex-col h-dvh' id='message-container'>
+    <div className='flex flex-col h-dvh bg-white shadow shadow-black-400'>
 
-      <div className='overflow-auto p-4 pb-28'>
+      <div className='overflow-auto p-4 pb-28' id='message-container'>
         <MessageList messages={messages} isLoading={isLoading} />
       </div>
 
-      <form onSubmit={handleSubmit} className='fixed bottom-0 right-0 w-1/2  p-1 grainy'>
+      <form onSubmit={handleSubmit} className='fixed bottom-0 right-0 w-1/2 p-1 bg-white shadow-black-400'>
+        <p className={cn('animate-bounce items-center ml-7', {
+          "hidden": !isAithinking,
+        })}> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ellipsis"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></p>
         <div className="flex flex-row items-center">
           <Textarea
             ref={textareaRef}
@@ -73,6 +76,13 @@ const ChatComponent = ({ chatId }: Props) => {
             value={input}
             autoFocus={false}
             onChange={handleInputChange}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && "form" in e.target) {
+                e.preventDefault();
+                (e.target.form as HTMLFormElement).requestSubmit();
+                textareaRef.current?.focus()
+              }
+            }}
             placeholder='Ask any question...'
             className='min-h-[0] resize-none pr-12 text-base py-2 focus:ring-1 focus-visible:ring-1'
           />

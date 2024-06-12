@@ -65,10 +65,7 @@ const MessageList = ({ messages, isLoading }: Props) => {
                             <p> {message.content}</p>
                         )}
 
-                        <i> {format(
-                            message.createdAt!,
-                            'HH:mm'
-                        )}</i>
+                        {/* <i> { format( message.createdAt!, 'HH:mm')}</i> */}
                     </div>
                 </div>
             ))}

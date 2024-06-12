@@ -47,13 +47,13 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
     },
   })
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="grid h-screen place-items-center">
-  //       <Loader2 className='w-6 h-6 animate-spin items-center' />
-  //     </div>
-  //   )
-  // }
+  if (isLoading) {
+    return (
+      <div className="grid h-screen place-items-center">
+        <Loader2 className='w-6 h-6 animate-spin items-center' />
+      </div>
+    )
+  }
 
   return (
     <main className='mx-auto max-w-7xl md:p-10'>
@@ -63,16 +63,12 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
         </h3>
       </div>
 
-      <div className="w-screen">
+      <div className="w-full">
         <FileUpload />
       </div>
 
       {/* display all user files */}
-      {isLoading ?
-        <div className="grid h-screen place-items-center">
-          <Loader2 className='w-6 h-6 animate-spin items-center' />
-        </div>
-        : files && files?.length !== 0 ? (
+      {files && files?.length !== 0 ? (
           <ul className='mt-8 grid grid-cols-1 gap-6 divide-y divide-zinc-200 md:grid-cols-2 lg:grid-cols-3'>
             {files
               .sort(

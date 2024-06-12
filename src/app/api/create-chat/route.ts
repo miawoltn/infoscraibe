@@ -18,7 +18,7 @@ export async function POST(req: Request, res: Response) {
         let pages = await loadS3IntoPinecone(file_key);
         console.log("pages", pages.length);
         const [id] = await db.insert(chats).values({
-            fileKye: file_key,
+            fileKey: file_key,
             pdfName: file_name,
             pdfUrl: getS3Url(file_key),
             userId

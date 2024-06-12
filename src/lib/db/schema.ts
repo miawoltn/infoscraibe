@@ -1,12 +1,9 @@
 import { timeStamp } from 'console';
+import { relations } from 'drizzle-orm';
 import {integer, pgEnum, pgTable, serial, text, timestamp, varchar} from 'drizzle-orm/pg-core'
 
 
 export const userSystemEnum = pgEnum('user_sytem_enum', ['system', 'user'])
-
-export type DrizzleChat = typeof chats.$inferSelect;
-
-export type UserSubscription = typeof userSubscriptions.$inferSelect | typeof userSubscriptions.$inferInsert
 
 export const chats = pgTable('chats', {
     id: serial('id').primaryKey(),
@@ -14,7 +11,7 @@ export const chats = pgTable('chats', {
     pdfUrl: text('pdf_url').notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     userId: varchar('user_id', {length: 256}).notNull(),
-    fileKye: text('file_kye').notNull(),
+    fileKey: text('file_key').notNull(),
 })
 
 
@@ -34,3 +31,11 @@ export const userSubscriptions = pgTable('user_subscriptions', {
     stripePriceId: varchar('stripe_price_id', { length: 256 }),
     stripeCurrentPeriodEnd: timestamp('stripe_current_period_end')
 })
+
+export const chatRelations = relations(chats, ({ many }) => ({
+    messages: many(messages),
+}))
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+	chat: one(chats, { fields: [messages.chatId], references: [chats.id] }),
+}));

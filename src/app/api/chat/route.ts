@@ -15,7 +15,7 @@ export async function POST(req: Request) {
         const chat = await getChatById(chatId);
         if (!chat) return NextResponse.json({ 'error': 'chat not found' }, { status: 404 });
        
-        const fileKey = chat.fileKye;
+        const fileKey = chat.fileKey;
         const lastMessage: Message = messages[messages.length - 1];
         const context = await getContext(lastMessage.content, fileKey);
         const prompt = {

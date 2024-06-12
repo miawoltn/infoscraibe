@@ -1,5 +1,4 @@
 'use client'
-import { DrizzleChat } from '@/lib/db/schema'
 import Link from 'next/link'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button } from './ui/button'
@@ -13,15 +12,13 @@ import { Message } from 'ai'
 import ChatInput from './ChatInput'
 import { Textarea } from './ui/textarea'
 import { cn } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 type Props = {
   chatId: number
 };
 
 const ChatComponent = ({ chatId }: Props) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  const [previousMessage, setPreviousMessage] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['chat', chatId],
@@ -30,18 +27,14 @@ const ChatComponent = ({ chatId }: Props) => {
       return response.data;
     }
   })
-  const { input, handleInputChange, handleSubmit, messages, isLoading: isAithinking } = useChat({
+  const { input, handleInputChange, handleSubmit, messages, isLoading: isAithinking, setInput } = useChat({
     api: '/api/chat',
     body: { chatId },
     initialMessages: data || [],
     onError: (error) => {
-      console.error(error)
-
-    },
-    onResponse: (response) => {
-    },
-    onFinish: (message) => {
-    },
+      toast.error('Unable to process chat.')
+      setInput(input)
+    }
   });
 
   useEffect(() => {
@@ -66,11 +59,11 @@ const ChatComponent = ({ chatId }: Props) => {
 
       <form onSubmit={handleSubmit} className='fixed bottom-0 right-0 w-1/2 p-1 bg-white shadow-black-400'>
         <p className={cn('animate-bounce items-center ml-7', {
-          "hidden": !isAithinking,
+          "hidden": isAithinking === false,
         })}> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ellipsis"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></p>
         <div className="flex flex-row items-center">
           <Textarea
-            ref={textareaRef}
+            // ref={textareaRef}
             disabled={isLoading}
             rows={1}
             value={input}
@@ -80,7 +73,6 @@ const ChatComponent = ({ chatId }: Props) => {
               if (e.key === "Enter" && !e.shiftKey && "form" in e.target) {
                 e.preventDefault();
                 (e.target.form as HTMLFormElement).requestSubmit();
-                textareaRef.current?.focus()
               }
             }}
             placeholder='Ask any question...'

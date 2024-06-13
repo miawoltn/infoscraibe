@@ -84,7 +84,7 @@ const Page = async () => {
 
   return (
     <>
-      <MaxWidthWrapper className='mb-8 mt-24 text-center max-w-5xl'>
+      <MaxWidthWrapper className='mb-8 mt-10 text-center max-w-5xl'>
         <div className='mx-auto mb-10 sm:max-w-lg'>
           <h1 className='text-6xl font-bold sm:text-7xl'>
             Pricing

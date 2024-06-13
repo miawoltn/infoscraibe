@@ -20,12 +20,12 @@ export default async function Home() {
   }
   return (
      <>
-      <MaxWidthWrapper className='mb-12 mt-28 sm:mt-40 flex flex-col items-center justify-center text-center'>
-        <h1 className='max-w-4xl text-5xl font-bold md:text-6xl lg:text-7xl'>
-          <Typewriter text="Easily converse with your documents in seconds." />
+      <MaxWidthWrapper className='mb-12 mt-10 sm:mt-40 flex flex-col items-center justify-center text-center'>
+        <h1 className='max-w-4xl text-2xl font-bold md:text-6xl lg:text-7xl'>
+          <Typewriter text="Access information in your documents in seconds." />
         </h1>
         <p className='mt-5 max-w-prose text-zinc-500 sm:text-lg'>
-        With InfoScribe, chat directly with any PDF. Upload your file and start asking questions instantly.
+        With InfoScrybe, chat directly with any PDF. Upload your file and start asking questions instantly.
         </p>
 
         <Link

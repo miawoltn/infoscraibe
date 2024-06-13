@@ -90,8 +90,7 @@ const Page = async () => {
             Pricing
           </h1>
           <p className='mt-5 text-gray-600 sm:text-lg'>
-            Whether you&apos;re just trying out our service
-            or need more, we&apos;ve got you covered.
+            Whether you&apos;re just giving our service a try or need something more, we&apos;ve got you covered.
           </p>
         </div>
 

@@ -24,7 +24,7 @@ const client = new S3Client({
 
 const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME
 
-export async function uploadToS3(file:File) {
+export async function uploadToS3(file:File, onProgress: (e: number)=> any) {
     try {
       
         const file_key = "uploads/" + Date.now().toString() + file.name.replace(" ", "-");
@@ -48,8 +48,12 @@ export async function uploadToS3(file:File) {
         //     console.log('successfully uploaded to s3!', file_key)
         // })
 
-        await upload.on('httpUploadProgress', (evt) =>{
-            console.log('uploading to s3...', parseInt(((evt.loaded! * 100)/evt.total!).toString())) + '%'
+        await upload.on('httpUploadProgress', (progressEvent) =>{
+            console.log('uploading to s3...', parseInt(((progressEvent.loaded! * 100)/progressEvent.total!).toString())) + '%'
+            const percentCompleted = Math.round((progressEvent.loaded! * 100) / progressEvent.total!);
+            if (onProgress) {
+                onProgress(percentCompleted);
+            }
         }).done();
 
         //   await upload.then(data => {

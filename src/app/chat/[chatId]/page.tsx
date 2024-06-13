@@ -31,7 +31,7 @@ const ChatPage = async ({ params: { chatId } }: Props) => {
     return (
         <div className='flex flex-col md:flex-row '>
                 {/* Left sidebar & main wrapper */}
-                <div className='w-full md:w-1/2 h-screen'>
+                <div className='w-full md:w-1/2 lg:md:h-screen h-1/3'>
                     <div className='px-4 py-6 sm:px-6 lg:pl-8 xl:flex-1 xl:pl-6'>
                         {/* Main area */}
                         <PdfViewer url={currentChat.pdfUrl} />

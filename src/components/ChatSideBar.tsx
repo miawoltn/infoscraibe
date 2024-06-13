@@ -1,5 +1,4 @@
 'use client'
-import { DrizzleChat } from '@/lib/db/schema'
 import Link from 'next/link'
 import React, { useState } from 'react'
 import { Button } from './ui/button'
@@ -9,7 +8,7 @@ import axios from 'axios'
 import SubscriptionButton from './SubscriptionButton'
 
 type Props = {
-    chats: DrizzleChat[];
+    chats: any[];
     chatId: number;
     isPro: boolean;
 };

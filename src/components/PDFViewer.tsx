@@ -41,7 +41,7 @@ interface PDFViewerProps {
   url: string
 }
 
-const PdfViewer = ({ url }: PDFViewerProps) => {
+const PDFViewer = ({ url }: PDFViewerProps) => {
   const { toast } = useToast()
 
   const [numPages, setNumPages] = useState<number>()
@@ -256,4 +256,4 @@ const PdfViewer = ({ url }: PDFViewerProps) => {
   )
 }
 
-export default PdfViewer
+export default PDFViewer

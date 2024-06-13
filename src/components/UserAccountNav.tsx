@@ -14,20 +14,21 @@ import Link from 'next/link'
 import { Gem } from 'lucide-react'
 import { Button } from './ui/button'
 import { SignOutButton } from '@clerk/nextjs'
-import { getUserSubscriptionPlan } from '@/lib/stripe'
+
 
 interface UserAccountNavProps {
   email: string | undefined
   name: string
-  imageUrl: string
+  imageUrl: string,
+  subscriptionPlan: any
 }
 
 const UserAccountNav = async ({
   email,
   imageUrl,
   name,
+  subscriptionPlan
 }: UserAccountNavProps) => {
-  const subscriptionPlan = await getUserSubscriptionPlan()
 
   return (
     <DropdownMenu>

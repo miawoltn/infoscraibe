@@ -2,7 +2,7 @@
 
 import ChatComponent from '@/components/ChatComponent';
 import ChatSideBar from '@/components/ChatSideBar';
-import PdfViewer from '@/components/PdfViewer';
+import PDFViewer from '@/components/PDFViewer';
 import { db, getChatByUserIdAndChatId } from '@/lib/db';
 import { chats } from '@/lib/db/schema';
 import { checkSubscription } from '@/lib/subscription';
@@ -34,7 +34,7 @@ const ChatPage = async ({ params: { chatId } }: Props) => {
                 <div className='w-full md:w-1/2 lg:md:h-screen h-1/3'>
                     <div className='px-4 py-6 sm:px-6 lg:pl-8 xl:flex-1 xl:pl-6'>
                         {/* Main area */}
-                        <PdfViewer url={currentChat.pdfUrl} />
+                        <PDFViewer url={currentChat.pdfUrl} />
                     </div>
                 </div>
 

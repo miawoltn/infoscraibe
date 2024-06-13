@@ -1,15 +1,13 @@
 'use client'
 
-import { ArrowRight, Menu } from 'lucide-react'
+import { ArrowRight, Gem, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-const MobileNav = ({ isAuth }: { isAuth: boolean }) => {
+const MobileNav = ({ isAuth, subscriptionPlan }: { isAuth: boolean, subscriptionPlan: any }) => {
   const [isOpen, setOpen] = useState<boolean>(false)
-
   const toggleOpen = () => setOpen((prev) => !prev)
-
   const pathname = usePathname()
 
   useEffect(() => {
@@ -31,7 +29,7 @@ const MobileNav = ({ isAuth }: { isAuth: boolean }) => {
 
       {isOpen ? (
         <div className='fixed animate-in slide-in-from-top-5 fade-in-20 inset-0 z-0 w-full'>
-          <ul className='absolute bg-white border-b border-zinc-200 shadow-xl grid w-full gap-3 px-10 pt-20 pb-8'>
+          <ul className='absolute bg-white border-b border-zinc-200 shadow-xl grid w-full gap-1 px-10 pt-20 pb-8'>
             {!isAuth ? (
               <>
                 <li>
@@ -75,17 +73,29 @@ const MobileNav = ({ isAuth }: { isAuth: boolean }) => {
                     onClick={() =>
                       closeOnCurrent('/dashboard')
                     }
-                    className='flex items-center w-full font-semibold'
+                    className='flex items-center w-full'
                     href='/dashboard'>
                     Dashboard
                   </Link>
                 </li>
                 <li className='my-3 h-px w-full bg-gray-300' />
                 <li>
+                  {subscriptionPlan?.isSubscribed ? (
+                    <Link className='cursor-pointer' href='/billing'>
+                      Manage Subscription
+                    </Link>
+                  ) : (
+                    <Link href='/pricing' className='flex items-center w-full'>
+                      Upgrade <Gem className='text-blue-600 h-3 w-3 ml-1' />
+                    </Link>
+                  )}
+                </li>
+                <li className='my-3 h-px w-full bg-gray-300' />
+                <li>
                   <Link
-                    className='flex items-center w-full font-semibold'
+                    className='flex items-center w-full'
                     href='/sign-out'>
-                    Sign out
+                    Logout
                   </Link>
                 </li>
               </>

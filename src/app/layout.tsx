@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "InfoScribe",
+  title: "InfoScraibe",
   description: "Chat with any PDF using AI",
 };
 

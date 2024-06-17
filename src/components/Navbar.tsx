@@ -23,6 +23,7 @@ const Navbar = async () => {
           <Link
             href='/'
             className='flex z-40 font-semibold text-xl'>
+              <Icons.logo className='fill-black-200 text-black-200 h-8 w-8' />
             <span>InfoScr<strong className='underline'>ai</strong>be</span>
           </Link>
 

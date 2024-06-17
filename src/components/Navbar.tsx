@@ -22,8 +22,8 @@ const Navbar = async () => {
         <div className='flex h-14 items-center justify-between border-b border-zinc-200'>
           <Link
             href='/'
-            className='flex z-40 font-semibold'>
-            <span>InfoScrybe</span>
+            className='flex z-40 font-semibold text-xl'>
+            <span>InfoScr<strong className='underline'>ai</strong>be</span>
           </Link>
 
           <MobileNav isAuth={isAuth} subscriptionPlan={subscriptionPlan} />

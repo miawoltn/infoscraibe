@@ -127,7 +127,7 @@ export default async function Home() {
                 Upload your PDF file
               </span>
               <span className='mt-2 text-zinc-700'>
-                We'll process your file and set it up for chatting.
+                We&apos;ll process your file and set it up for chatting.
               </span>
             </div>
           </li>

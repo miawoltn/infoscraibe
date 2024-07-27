@@ -89,9 +89,9 @@ const PDFViewer = ({ url }: PDFViewerProps) => {
   }
 
   return (
-    <div className='w-full h-auto bg-white rounded-md shadow flex flex-col items-center no-scrollbar'>
+    <div className='w-full h-auto bg-white dark:bg-transparent rounded-md shadow flex flex-col items-center border border-gray-500'>
       <div className='h-14 w-full border-b border-zinc-200 flex items-center justify-between px-2'>
-        <div className='flex items-center gap-1.5'>
+        <div className='flex items-center gap-1'>
           <Button
             disabled={currPage <= 1 || scroll}
             onClick={() => {
@@ -150,7 +150,7 @@ const PDFViewer = ({ url }: PDFViewerProps) => {
         </div>
 
         {/* <div className='flex flex-row sm:flex-row space-x-1 items-center justify-end overflow-x-auto md:overflow-x-hidden md:space-x-0 md:grid-cols-12 md:gap-1 md:grid'> */}
-        <div className='flex flex-row sm:flex-row overflow-x-auto md:overflow-x-hidden space-x-2'>
+        <div className='flex flex-row sm:flex-row overflow-x-scroll md:overflow-x-scroll space-x-2'>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

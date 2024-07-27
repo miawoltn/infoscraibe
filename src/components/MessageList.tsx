@@ -4,7 +4,10 @@ import { Loader2, Target } from 'lucide-react'
 import React from 'react'
 import { Icons } from './Icons'
 import { format } from 'date-fns'
-import Markdown from 'react-markdown'
+import Markdown from 'markdown-to-jsx'
+// import Markdown from 'react-markdown'
+
+
 
 type Props = {
     messages: Message[],
@@ -47,24 +50,19 @@ const MessageList = ({ messages, isLoading }: Props) => {
                         {message.role === 'user' ? (
                             <Icons.user className='fill-black-200 text-black-200 h-3/4 w-3/4' />
                         ) : (
-                            <Icons.logo className='fill-black-300 h-3/4 w-3/4' />
+                            <Icons.logo className='fill-black-300 dark:fill-while h-3/4 w-3/4' />
                         )}
                     </div>
                     <div className={cn('rounded-lg px-3 text-sm py-1 mb-2 shadow-md ring-1 ring-gray-900/10 inline-block', {
                         'bg-blue-600 text-white': message.role === 'user'
                     })}>
 
-                        {typeof message.content === 'string' ? (
-                            <Markdown
-                                className={cn('prose', {
-                                    'text-zinc-50': message.role === 'user',
-                                })}>
-                                {message.content}
+                        <Markdown
+                            className={cn('prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 font-medium', {
+                                'text-zinc-50': message.role === 'user',
+                            })}>
+                            {message.content}
                             </Markdown>
-                        ) : (
-                            <p> {message.content}</p>
-                        )}
-
                         {/* <i> { format( message.createdAt!, 'HH:mm')}</i> */}
                     </div>
                 </div>

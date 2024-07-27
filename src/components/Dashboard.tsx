@@ -60,7 +60,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
   return (
     <main className='mx-auto max-w-7xl md:p-10 w-full'>
       <div className='mt-0 flex flex-col items-center justify-between gap-4 border-b border-gray-200 pb-5 sm:flex-row sm:items-center sm:gap-0'>
-        <h3 className='mb-3 font-bold text-5xl text-gray-900'>
+        <h3 className='mb-3 font-bold text-5xl text-gray-900 dark:text-gray-300'>
           My Files
         </h3>
 
@@ -87,7 +87,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
 
       {/* display all user files */}
       {files && files?.length !== 0 ? (
-        <ul className='mt-8 grid grid-cols-1 gap-6 divide-y divide-zinc-200 md:grid-cols-2 lg:grid-cols-3'>
+        <ul className='mt-8 grid grid-cols-1 gap-6 divide-y divide-zinc-200 dark:divide-zinc-500 md:grid-cols-2 lg:grid-cols-3'>
           {files
             .sort(
               (a, b) =>
@@ -97,7 +97,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
             .map((file) => (
               <li
                 key={file.id}
-                className='col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow transition hover:shadow-lg'>
+                className='col-span-1 divide-y divide-gray-200 rounded-lg bg-white dark:bg-slate-800 shadow transition hover:shadow-lg dark:hover:shadow-white/10'>
                 <Link
                   href={`/chat/${file.id}`}
                   className='flex flex-col gap-2'>
@@ -106,7 +106,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
                     <FileText />
                     <div className='flex-1 truncate'>
                       <div className='flex items-center space-x-3'>
-                        <h3 className='truncate text-lg font-medium text-zinc-900'>
+                        <h3 className='truncate text-lg font-medium text-zinc-900 dark:text-zinc-300'>
                           {file.pdfName}
                         </h3>
                       </div>
@@ -114,7 +114,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
                   </div>
                 </Link>
 
-                <div className='px-5 mt-4 grid grid-cols-3 place-items-center py-2 gap-6 text-xs text-zinc-500'>
+                <div className='px-5 mt-4 grid grid-cols-3 place-items-center py-2 gap-6 text-xs text-zinc-500 dark:text-zinc-300'>
                   <div className='flex items-center gap-2'>
                     <Plus className='h-4 w-4' />
                     {format(
@@ -150,7 +150,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
         <Skeleton height={100} className='my-2' count={3} />
       ) : (
         <div className='mt-16 flex flex-col items-center gap-2'>
-          <Ghost className='h-8 w-8 text-zinc-800' />
+          <Ghost className='h-8 w-8 text-zinc-800 dark:text-zinc-200' />
           <h3 className='font-semibold text-xl'>
             Pretty empty around here
           </h3>

@@ -3,6 +3,7 @@
 import ChatComponent from '@/components/ChatComponent';
 import ChatSideBar from '@/components/ChatSideBar';
 import PDFViewer from '@/components/PDFViewer';
+import { Button } from '@/components/ui/button';
 import { db, getChatByUserIdAndChatId } from '@/lib/db';
 import { chats } from '@/lib/db/schema';
 import { checkSubscription } from '@/lib/subscription';
@@ -31,14 +32,14 @@ const ChatPage = async ({ params: { chatId } }: Props) => {
     return (
         <div className='flex flex-col md:flex-row '>
                 {/* Left sidebar & main wrapper */}
-                <div className='w-full md:w-1/2 lg:md:h-screen h-1/3'>
+                <div className='w-full md:w-1/3 lg:md:h-screen h-2/3'>
                     <div className='px-4 py-6 sm:px-6 lg:pl-8 xl:flex-1 xl:pl-6'>
                         {/* Main area */}
                         <PDFViewer url={currentChat.pdfUrl} />
                     </div>
                 </div>
 
-                <div className='w-full md:w-1/2 border-t border-b border-gray-200'>
+                <div className='w-full md:w-2/3 border-l border-gray-200 dark:border-gray-600'>
                     <ChatComponent chatId={Number(chatId)} />
                 </div>
         </div>

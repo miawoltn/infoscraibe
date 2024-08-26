@@ -1,6 +1,5 @@
 'use client'
 
-// import { trpc } from '@/app/_trpc/client'
 import {
   FileText,
   Ghost,
@@ -14,40 +13,90 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { Button } from './ui/button'
 import { useState } from 'react'
-// import { getUserSubscriptionPlan } from '@/lib/stripe'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
-// import { DrizzleChat } from '@/lib/db'
 import FileUpload from './FileUpload'
 import { getUserSubscriptionPlan } from '@/lib/stripe'
-import { Dialog, DialogContent, DialogTrigger } from './ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
+import toast from 'react-hot-toast'
 
 interface PageProps {
   subscriptionPlan: Awaited<ReturnType<typeof getUserSubscriptionPlan>>
 }
 
 const Dashboard = ({ subscriptionPlan }: PageProps) => {
-  const [isOpen, setIsOpen] = useState(false)
   const [currentlyDeletingFile, setCurrentlyDeletingFile] =
     useState<string | null>(null)
+  const [showAlert, setShowAlert] = useState(false)
 
-  const { data: files, isLoading } = useQuery({
+  const queryClient = useQueryClient()
+  const { data: files, isLoading, refetch } = useQuery({
     queryKey: [''],
     queryFn: async () => (await axios.get<any[]>('/api/chat')).data
   });
 
+  const { mutate: deleteChat, isPending: isDeletingChat } = useMutation({
+    mutationFn: async ({ chatId }: { chatId: string }) => {
+        const { data } = await axios.delete(`/api/chat`, {
+          data: {chatId}
+        })
+        return data
+    }
+})
 
-  const { mutate: deleteFile } = useMutation({
-    onSuccess: () => {
-      // utils.getUserFiles.invalidate()
-    },
-    onMutate({ id }: { id: any }) {
-      setCurrentlyDeletingFile(id)
-    },
-    onSettled() {
-      setCurrentlyDeletingFile(null)
-    },
-  })
+  // const { mutate: deleteFile } = useMutation({
+  //   onSuccess: () => {
+  //     console.log('onSuccess')
+  //    setShowAlert(true)
+  //   },
+  //   onMutate({ id }: { id: any }) {
+  //     console.log('onMutate', id)
+  //     setCurrentlyDeletingFile(id)
+  //     setShowAlert(true)
+  //   },
+  //   onSettled() {
+  //     console.log('onSettled')
+  //     setCurrentlyDeletingFile(null)
+  //   },
+  // })
+
+  const handleFileDeletion = (id: string) => {
+    setCurrentlyDeletingFile(id)
+    setShowAlert(true)
+
+  }
+
+  const ConfirmDialog = () => {
+    return (
+      <Dialog open={showAlert} onOpenChange={(b) => { console.log(b) }}>
+      <DialogContent>
+          <DialogHeader>
+              <DialogTitle>Delete File</DialogTitle>
+              <DialogDescription>
+                  Are you sure you want to delete this file?
+              </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+              <Button variant='outline' onClick={() => { setShowAlert(false) }}>No</Button>
+              <Button variant='destructive' onClick={() => {
+                 deleteChat({ chatId: currentlyDeletingFile! }, {
+                  onSuccess: async (data) => {
+                    console.log('file delete:', data)
+                    setShowAlert((curr) => false)
+                    await queryClient.invalidateQueries({queryKey:['']})
+                  },
+                  onError: (error) => {
+                      console.log('delete mutation', error)
+                     toast.error('Unable to delete file');
+                     setShowAlert(false)
+                  }
+              })
+              }}>Yes</Button>
+          </DialogFooter>
+      </DialogContent>
+  </Dialog>
+    )
+  }
 
   if (isLoading) {
     return (
@@ -63,26 +112,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
         <h3 className='mb-3 font-bold text-5xl text-gray-900 dark:text-gray-300'>
           My Files
         </h3>
-
-        <Dialog
-          open={isOpen}
-          onOpenChange={(v) => {
-            if (!v) {
-              setIsOpen(v)
-            }
-          }}>
-          <DialogTrigger
-            onClick={() => setIsOpen(true)}
-            asChild>
-            <Button>Upload PDF</Button>
-          </DialogTrigger>
-
-          <DialogContent>
-            <div className="w-full">
-              <FileUpload isSubscribed={subscriptionPlan.isSubscribed} />
-            </div>
-          </DialogContent>
-        </Dialog>
+        <FileUpload isSubscribed={subscriptionPlan.isSubscribed} />
       </div>
 
       {/* display all user files */}
@@ -99,15 +129,15 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
                 key={file.id}
                 className='col-span-1 divide-y divide-gray-200 rounded-lg bg-white dark:bg-slate-800 shadow transition hover:shadow-lg dark:hover:shadow-white/10'>
                 <Link
-                  href={`/chat/${file.id}`}
+                  href={`/chat/${file.id}:${file.checksum}`}
                   className='flex flex-col gap-2'>
                   <div className='pt-6 px-6 flex w-full items-center justify-between space-x-6'>
                     {/* <div className='h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500' /> */}
                     <FileText />
                     <div className='flex-1 truncate'>
-                      <div className='flex items-center space-x-3'>
-                        <h3 className='truncate text-lg font-medium text-zinc-900 dark:text-zinc-300'>
-                          {file.pdfName}
+                      <div className='flex items-center space-x-3 overflow-x-hidden'>
+                        <h3 className='text-lg font-medium text-zinc-900 dark:text-zinc-300 overflow-scroll'>
+                          {file.fileName}
                         </h3>
                       </div>
                     </div>
@@ -130,10 +160,11 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
 
                   <Button
                     onClick={() =>
-                      deleteFile({ id: file.id })
+                      // deleteFile({ id: file.id })
+                      handleFileDeletion(file.id)
                     }
                     size='sm'
-                    className='w-full hidden'
+                    className='w-full hover:scale-105'
                     variant='destructive'>
                     <Trash className='h-4 w-4' />
                     {/* {currentlyDeletingFile == file.id+"" ? (
@@ -157,6 +188,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
           <p>Let&apos;s upload your first PDF.</p>
         </div>
       )}
+      <ConfirmDialog />
     </main>
   )
 }

@@ -2,7 +2,7 @@ import { db } from "@/lib/db"
 import { chats } from "@/lib/db/schema"
 import { loadS3IntoPinecone } from "@/lib/pinecone"
 import { getS3Url } from "@/lib/s3"
-import { auth, currentUser } from "@clerk/nextjs"
+import { currentUser } from "@clerk/nextjs"
 import { NextResponse } from "next/server"
 
 export async function POST(req: Request, res: Response) {
@@ -13,20 +13,24 @@ export async function POST(req: Request, res: Response) {
     }
     try {
         const body = await req.json()
-        const { file_key, file_name } = body
-        console.log(file_key, file_name)
-        let pages = await loadS3IntoPinecone(file_key);
+        const { fileKey, fileName, fileType, checksum } = body
+
+        if(!fileType || !fileName || !fileKey || !checksum) {
+            return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+        }
+        const pages = await loadS3IntoPinecone(fileKey, fileType);
         console.log("pages", pages.length);
         const [id] = await db.insert(chats).values({
-            fileKey: file_key,
-            pdfName: file_name,
-            pdfUrl: getS3Url(file_key),
+            fileKey,
+            fileName,
+            fileUrl: getS3Url(fileKey),
+            checksum,
             userId
         }).returning({
             insertedId: chats.id
         })
         return NextResponse.json(
-            { message: 'Chat created sucessfully', chat_id: id.insertedId },
+            { message: 'Chat created sucessfully', id: id.insertedId, checksum },
             { status: 200 }
         )
     } catch (err) {

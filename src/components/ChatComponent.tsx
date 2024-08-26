@@ -66,14 +66,14 @@ const ChatComponent = ({ chatId }: Props) => {
   const isButtonDisabled = isLoading || isAithinking || !!!input
 
   return (
-    <div className='flex flex-col h-dvh bg-white dark:bg-transparent shadow shadow-black-400'>
+    <div className='flex flex-col h-dvh bg-white dark:bg-background shadow shadow-black-400'>
 
-      <div className='overflow-auto p-4 pb-28' id='message-container'>
+      <div className='overflow-auto p-4 mb-10 pb-10' id='message-container'>
         <MessageList messages={messages} isLoading={isLoading} />
       </div>
 
-      {/* <div className='p-4 px-10 mx-10'> */}
-      <MessageInput loading={isButtonDisabled} message={input} handleSubmit={handleSubmit} handleInputChange={handleInputChange} />
+      {/* <div className='fixed bottom-0 overflow-auto bg-background pb-10 w-full'> */}
+      <MessageInput isAiThinking={isAithinking} loading={isButtonDisabled} message={input} handleSubmit={handleSubmit} handleInputChange={handleInputChange} />
       {/* </div> */}
       {/* <form onSubmit={handleSubmit} className='fixed bottom-0 right-0 md:w-2/3 w-full p-1 bg-white dark:bg-transparent shadow-black-400 px-10'>
         <p className={cn('animate-bounce items-center ml-7', {

@@ -2,7 +2,7 @@ export const PLANS = [
     {
       name: 'Free',
       slug: 'free',
-      quota: 10,
+      quota: 5,
       pagesPerPdf: 5,
       price: {
         amount: 0,
@@ -11,12 +11,20 @@ export const PLANS = [
           production: '',
         },
       },
+      fileTypes: {
+       "application/pdf": [".pdf"],
+       "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+       [".docx"],
+     "application/msword": [".doc"],
+     "text/plain": [".txt"]
+      }
     },
     {
       name: 'Pro',
       slug: 'pro',
       quota: 50,
       pagesPerPdf: 25,
+      fileSize: 50, 
       price: {
         amount: 14,
         priceIds: {
@@ -24,5 +32,12 @@ export const PLANS = [
           production: '',
         },
       },
+      fileTypes: {
+        "application/pdf": [".pdf"],
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+          [".docx"],
+        "application/msword": [".doc"],
+        "text/plain": [".txt"]
+      }
     },
   ]

@@ -1,18 +1,8 @@
 
-import AWS from 'aws-sdk'
-import {GetObjectCommand, GetObjectCommandInput, S3Client} from '@aws-sdk/client-s3'
-import {Upload} from '@aws-sdk/lib-storage'
-
-//   AWS.config.update({
-//             accessKeyId: process.env.NEXT_PUBLIC_S3_ACCESS_KEY_ID,
-//             secretAccessKey: process.env.NEXT_PUBLIC_S3_SECRET_ACCESS_KEY,
-//         })
-// const s3 = new AWS.S3({
-//     params: {
-//         Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME
-//     },
-//     region: process.env.NEXT_PUBLIC_AWS_REGION
-//         })
+import { AbortMultipartUploadCommand, CompleteMultipartUploadCommandOutput, DeleteObjectCommand, GetObjectCommand, GetObjectCommandInput, HeadObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { Upload } from '@aws-sdk/lib-storage'
+import toast from 'react-hot-toast';
+import { v4 } from 'uuid';
 
 const client = new S3Client({
     credentials: {
@@ -24,49 +14,65 @@ const client = new S3Client({
 
 const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME
 
-export async function uploadToS3(file:File, onProgress: (e: number)=> any) {
-    try {
-      
-        const file_key = "uploads/" + Date.now().toString() + file.name.replace(" ", "-");
+const PART_SIZE = 5 * 1024 * 1024;
 
+let currentUploadId: any = null;
+
+export async function uploadToS3({ file, fileExtension }: { file: File, fileExtension: string }, onProgress: (e: number) => any, onAbort: (upload: Upload) => any) {
+    const fileKey = `uploads/${v4()}.${fileExtension}`;
+    try {
         const params = {
             Bucket: bucketName,
-            Key: file_key,
+            Key: fileKey,
             Body: file,
-          };
-        // const upload = s3.putObject(params).on('httpUploadProgress', evt =>{
-        //     console.log('uploading to s3...', parseInt(((evt.loaded * 100)/evt.total).toString())) + '%'
-        //   }).promise();
+        };
 
-    
         const upload = new Upload({
             client,
-            params
-        })
-        // .done()
-        // .then(data => {
-        //     console.log('successfully uploaded to s3!', file_key)
-        // })
+            tags: [], // optional tags
+            queueSize: 4, // optional concurrency configuration
+            partSize: PART_SIZE, // optional size of each part
+            leavePartsOnError: false, // optional manually handle dropped parts
+            params: params,
+        });
 
-        await upload.on('httpUploadProgress', (progressEvent) =>{
-            console.log('uploading to s3...', parseInt(((progressEvent.loaded! * 100)/progressEvent.total!).toString())) + '%'
+        if (onAbort) {
+            onAbort(upload);
+        }
+
+        console.log('upload started')
+        return await upload.on('httpUploadProgress', (progressEvent) => {
+            console.log('uploading to s3...', parseInt(((progressEvent.loaded! * 100) / progressEvent.total!).toString())) + '%'
             const percentCompleted = Math.round((progressEvent.loaded! * 100) / progressEvent.total!);
             if (onProgress) {
                 onProgress(percentCompleted);
             }
-        }).done();
+        })
+            .done()
+            .then((data: CompleteMultipartUploadCommandOutput) => {
+                console.log('ETag', data.ETag)
+                // return data;
+                return Promise.resolve({
+                    fileKey,
+                    fileName: file.name,
+                    checksum: data.ETag?.replace(/"/g, "") ?? ''
+                })
+            })
+            .catch((error) => {
+                console.log('first', error)
+                return Promise.resolve(null)
+            });
 
-        //   await upload.then(data => {
-        //     console.log('successfully uploaded to s3!', file_key)
-        //   })
 
 
-          return Promise.resolve({
-            file_key, 
-            file_name: file.name
-          })
-    } catch(error) {
-        Promise.reject(error)
+        // console.log('upload done')
+        // return Promise.resolve({
+        //     fileKey,
+        //     fileName: file.name,
+        // })
+    } catch (error: any) {
+        console.log({ error })
+        Promise.reject(new Error(error.message))
     }
 }
 
@@ -74,20 +80,57 @@ export async function downloadFromS3(file_key: string) {
     try {
         const input: GetObjectCommandInput = {
             Bucket: bucketName,
-            Key: file_key,
-            ResponseContentEncoding: "base64",
-            ResponseContentDisposition: "inline",
-          };
-          const command = new GetObjectCommand(input);
-          const s3GetObjectResponse = await client.send(command);
-          const base64Image = await s3GetObjectResponse.Body?.transformToString("base64");
-          return base64Image;
-    } catch(error) {
+            Key: file_key
+        };
+        const command = new GetObjectCommand(input);
+        const s3GetObjectResponse = await client.send(command);
+        const base64Image = await s3GetObjectResponse.Body?.transformToString("base64");
+        return base64Image;
+    } catch (error) {
         Promise.reject(error)
+    }
+}
+
+export async function abortMultipartUpload(fileKey: string, uploadId: string) {
+    try {
+        const abortMultipartUploadCommand = new AbortMultipartUploadCommand({
+            Bucket: bucketName,
+            Key: fileKey,
+            UploadId: uploadId,
+        });
+        await client.send(abortMultipartUploadCommand);
+        console.log(`Multipart upload with ID ${uploadId} has been aborted.`);
+    } catch (error) {
+        console.error('Error aborting multipart upload:', error);
     }
 }
 
 export function getS3Url(file_key: string) {
     const url = `https://${bucketName}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${file_key}`;
     return url;
+}
+
+export const deleteFileFromS3 = async (
+    bucketKey: string,
+) => {
+    const command = new DeleteObjectCommand({
+        Bucket: bucketName,
+        Key: bucketKey,
+    });
+
+    try {
+        const response = await client.send(command);
+        console.log({ response });
+    } catch (err) {
+        console.error('S3 delete error: ', err);
+    }
+}
+
+export const getFileHeadFromS3 = async (bucketKey: string) => {
+    const input: GetObjectCommandInput = {
+        Bucket: bucketName,
+        Key: bucketKey
+    };
+    const command = new HeadObjectCommand(input);
+    return await client.send(command);
 }

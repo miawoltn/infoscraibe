@@ -27,6 +27,7 @@ interface BillingFormProps {
 const BillingForm = ({
   subscriptionPlan,
 }: BillingFormProps) => {
+  
 
     const [loading, setLoading] = useState(false);
 
@@ -55,7 +56,7 @@ const BillingForm = ({
             <CardTitle>Subscription Plan</CardTitle>
             <CardDescription>
               You are currently on the{' '}
-              <strong>{subscriptionPlan.name}</strong> plan.
+              <strong>{subscriptionPlan.plan?.name}</strong> plan.
             </CardDescription>
           </CardHeader>
 

@@ -33,9 +33,9 @@ const Page = async () => {
             'The maximum amount of pages per PDF-file.',
         },
         {
-          text: '4MB file size limit',
+          text: `${PLANS.find((p) => p.slug === 'free')!.quota}MB file size limit`,
           footnote:
-            'The maximum file size of a single PDF file.',
+            'The maximum file size of a single file.',
         },
         {
           text: 'Mobile-friendly interface',
@@ -63,7 +63,7 @@ const Page = async () => {
             'The maximum amount of pages per PDF-file.',
         },
         {
-          text: '16MB file size limit',
+          text: `${PLANS.find((p) => p.slug === 'pro')!.fileSize}MB file size limit`,
           footnote:
             'The maximum file size of a single PDF file.',
         },

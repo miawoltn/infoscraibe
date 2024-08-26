@@ -1,9 +1,9 @@
 import { cn } from '@/lib/utils'
 import { Message } from 'ai/react'
-import { Loader2, Target } from 'lucide-react'
+import { Loader2, MessageCircleWarningIcon, Target } from 'lucide-react'
 import React from 'react'
 import { Icons } from './Icons'
-import { format } from 'date-fns'
+import { format, formatRelative, subDays } from 'date-fns'
 import Markdown from 'markdown-to-jsx'
 // import Markdown from 'react-markdown'
 
@@ -22,8 +22,16 @@ const MessageList = ({ messages, isLoading }: Props) => {
             </div>
         )
     }
-    if (!messages) {
-        return (<></>)
+    if (!messages.length) {
+        return (
+            <div className='mt-16 flex flex-col text-center items-center gap-2'>
+                <MessageCircleWarningIcon className='h-8 w-8 text-zinc-800 dark:text-zinc-200' />
+                <h3 className='font-semibold text-xl'>
+                    Pretty empty around here
+                </h3>
+                <p>Start chatting with your document.</p>
+            </div>
+        )
     }
     return (
         <div className='flex flex-col gap-3 px-4'>
@@ -31,30 +39,31 @@ const MessageList = ({ messages, isLoading }: Props) => {
 
                 <div
                     key={message.id}
-                    className={cn('flex', {
+                    className={cn('flex flex-row margin-auto', {
                         'justify-end pl-10': message.role === 'user',
-                        'justify-start pr-10': message.role === 'assistant',
+                        'justify-start pr-10': message.role === 'system',
                     })}
                 >
                     <div
                         className={cn(
-                            'relative flex h-6 w-6 aspect-square items-center justify-center',
+                            'relative flex flex-shrink-0 h-6 w-6 aspect-square',
                             {
                                 'order-2 bg-black-600 rounded-sm':
                                     message.role === 'user',
-                                'order-1 bg-black-600 rounded-sm':
-                                    message.role === 'assistant',
+                                // 'order-1 bg-black-600 rounded-sm':
+                                //     message.role === 'system',
                                 // invisible: message.role === messages[index - 1]?.role,
                             }
                         )}>
                         {message.role === 'user' ? (
-                            <Icons.user className='fill-black-200 text-black-200 h-3/4 w-3/4' />
+                            <Icons.user className='fill-black-200 text-black-200' />
                         ) : (
-                            <Icons.logo className='fill-black-300 dark:fill-while h-3/4 w-3/4' />
+                            <Icons.logo className='fill-black-300 dark:fill-white' />
                         )}
                     </div>
                     <div className={cn('rounded-lg px-3 text-sm py-1 mb-2 shadow-md ring-1 ring-gray-900/10 inline-block', {
-                        'bg-blue-600 text-white': message.role === 'user'
+                        'bg-gray-800 border border-gray-800 text-white max-w-1/2': message.role === 'user',
+                        'max-w-2/3 items-baseline text-balance': message.role === 'system'
                     })}>
 
                         <Markdown
@@ -62,8 +71,8 @@ const MessageList = ({ messages, isLoading }: Props) => {
                                 'text-zinc-50': message.role === 'user',
                             })}>
                             {message.content}
-                            </Markdown>
-                        {/* <i> { format( message.createdAt!, 'HH:mm')}</i> */}
+                        </Markdown>
+                        {/* <p className='text-sm'> <i> {formatRelative((message.createdAt!), new Date())}</i></p> */}
                     </div>
                 </div>
             ))}

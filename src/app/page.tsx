@@ -9,6 +9,7 @@ import { UserButton, auth, UserProfile } from "@clerk/nextjs";
 import { ArrowRight, ArrowRightIcon, LogIn } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 export default async function Home() {
@@ -19,12 +20,16 @@ export default async function Home() {
   if(userId) {
     firstChat = await getChatByUserId(userId);
   }
+
+  if(isAuth) {
+    return redirect('/dashboard')
+  }
   return (
      <>
      <Suspense>
       <MaxWidthWrapper className='mb-12 mt-10 sm:mt-40 flex flex-col items-center justify-center text-center'>
         <h1 className='max-w-4xl text-2xl font-bold md:text-6xl lg:text-7xl'>
-          <Typewriter text="Access information in your documents in seconds." />
+          <Typewriter text="Access information from your documents in seconds." />
         </h1>
         <p className='mt-5 max-w-prose text-zinc-500 dark:text-zinc-200 sm:text-lg'>
         With InfoScraibe, chat directly with any PDF. Upload your file and start asking questions instantly.

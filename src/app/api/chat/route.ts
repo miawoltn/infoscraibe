@@ -1,13 +1,15 @@
 // import { Configuration, OpenAIApi } from 'openai-edge'
 import { Message, OpenAIStream, StreamingTextResponse } from 'ai'
 import { NextResponse } from 'next/server';
-import { db, getChatById, getChatsByUserId } from '@/lib/db';
+import { db, deleteChatById, getChatById, getChatsByUserId, updateChatById } from '@/lib/db';
 import { getContext } from '@/lib/context';
 import { openai } from '@/lib/openai';
 import { messages as msgs } from '@/lib/db/schema';
-import { auth } from '@clerk/nextjs';
+import { auth, currentUser } from '@clerk/nextjs';
+import { getFileHeadFromS3 } from '@/lib/s3';
 
 // export const runtime = 'edge';
+// export const dynamic = "force-dynamic"
 
 export async function POST(req: Request) {
     try {
@@ -36,8 +38,8 @@ export async function POST(req: Request) {
             `,
         };
         const response = await openai.createChatCompletion({
-            model: 'gpt-3.5-turbo',
-            messages: [prompt, ...messages.filter((message: Message) => message.role === 'user')],
+            model: 'gpt-4-turbo',
+            messages: [prompt, ...messages], // include all messages for pro user
             stream: true
         });
         const stream = OpenAIStream(response,  {
@@ -65,5 +67,41 @@ export async function GET(req: Request) {
     }
 
     const chats = await getChatsByUserId(userId);
+    chats.forEach(async (chat) => {
+        if(!chat.checksum)  {
+            const {messages, checksum, ...rest} = chat
+            chat.checksum = (await getFileHeadFromS3(chat.fileKey)).ETag?.replace(/"/g, "") ?? ''
+            await updateChatById(chat.id, {checksum: chat.checksum, ...rest})
+        }
+        
+    })
     return NextResponse.json(chats);
+}
+
+export async function DELETE(request: Request) {
+    const user = await currentUser()
+    const userId = user?.id;
+    if (!userId) {
+        return NextResponse.json({ error: 'unauthorised' }, { status: 401 })
+    }
+    try {
+        const { chatId } = await request.json();
+
+        if(!chatId) {
+            return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+        }
+       
+        deleteChatById(chatId);
+       
+        return NextResponse.json(
+            { message: 'Chat scheduled for delete' },
+            { status: 200 }
+        )
+    } catch (err) {
+        console.error(err)
+        return NextResponse.json(
+            { error: "internal server error" },
+            { status: 500 }
+        )
+    }
 }

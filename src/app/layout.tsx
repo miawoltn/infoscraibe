@@ -19,7 +19,7 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   title: "InfoScraibe",
-  description: "Chat with any PDF using AI",
+  description: "Chat with any your documents using AI",
 };
 
 export default function RootLayout({

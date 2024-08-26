@@ -110,7 +110,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
     <main className='mx-auto max-w-7xl md:p-10 w-full'>
       <div className='mt-0 flex flex-col items-center justify-between gap-4 border-b border-gray-200 pb-5 sm:flex-row sm:items-center sm:gap-0'>
         <h3 className='mb-3 font-bold text-5xl text-gray-900 dark:text-gray-300'>
-          My Files
+          My Documents
         </h3>
         <FileUpload isSubscribed={subscriptionPlan.isSubscribed} />
       </div>

@@ -15,24 +15,23 @@ import { Suspense } from "react";
 export default async function Home() {
   const { userId } = await auth();
   const isAuth = !!userId;
-  const isPro = await checkSubscription();
-  let firstChat;
-  if(userId) {
-    firstChat = await getChatByUserId(userId);
-  }
+  // const isPro = await checkSubscription();
+  // let firstChat;
+  // if(userId) {
+  //   firstChat = await getChatByUserId(userId);
+  // }
 
   if(isAuth) {
     return redirect('/dashboard')
   }
   return (
-     <>
      <Suspense>
-      <MaxWidthWrapper className='mb-12 mt-10 sm:mt-40 flex flex-col items-center justify-center text-center'>
-        <h1 className='max-w-4xl text-2xl font-bold md:text-6xl lg:text-7xl'>
+      <MaxWidthWrapper className='mb-12 mt-10 sm:md:mt-40 flex flex-col items-center justify-center text-center'>
+        <h1 className='max-w-4xl text-xl font-bold md:text-4xl lg:text-6xl'>
           <Typewriter text="Access information from your documents in seconds." />
         </h1>
-        <p className='mt-5 max-w-prose text-zinc-500 dark:text-zinc-200 sm:text-lg'>
-        With InfoScraibe, chat directly with any PDF. Upload your file and start asking questions instantly.
+        <p className='mt-5 max-w-prose text-zinc-500 dark:text-zinc-200 sm:text-base'>
+        With InfoScraibe, chat directly with you document. Upload your file and start asking questions instantly.
         </p>
 
         <Link
@@ -169,6 +168,5 @@ export default async function Home() {
         </div>
       </div>
       </Suspense>
-    </>
   );
 }

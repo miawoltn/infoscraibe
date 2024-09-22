@@ -1,6 +1,6 @@
 'use client'
 import { uploadToS3 } from '@/lib/s3'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Cloud, File, Inbox, Loader2 } from 'lucide-react'
 import React, { useCallback, useRef, useState } from 'react'
 import { Accept, useDropzone } from 'react-dropzone'
@@ -8,11 +8,12 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import { Progress } from './ui/progress'
-import { cn, getFileMetadata } from '@/lib/utils'
+import { cn, getFileMetadata, uploadFileToS3 } from '@/lib/utils'
 import { PLANS } from '@/config/pricing'
 import { Upload } from '@aws-sdk/lib-storage'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
 import { Button } from './ui/button'
+import { v4 } from 'uuid'
 
 
 const FileUpload = ({
@@ -26,6 +27,7 @@ const FileUpload = ({
     const [isOpen, setIsOpen] = useState(false) // file upload dialog
     const [showAlert, setShowAlert] = useState(false)
     const [upload, setUpload] = useState<Upload | null>(null)
+    const [upload2, setUpload2] = useState<AbortController | null>(null)
     const [fileKey, setFileKey] = useState('')
     const [isAbortFileCreation, setAbort] = useState(false)
     const [acceptedFiles, setAcceptedFiles] = useState<File[]>([])
@@ -41,6 +43,7 @@ const FileUpload = ({
             return data
         }
     })
+
     const plan = PLANS.find((p) => p.slug === (isSubscribed ? 'pro' : 'free'))
     const fileSize = plan!.fileSize || 5;
     const fileTypes = plan!.fileTypes || { "application/pdf": [".pdf"] };
@@ -54,7 +57,7 @@ const FileUpload = ({
             return
         }
 
-        const { fileType, fileExtension } = getFileMetadata(file.name);
+        const { fileType } = getFileMetadata(file.name);
 
         if (!Object.keys(fileTypes).includes(fileType || '')) {
             toast.error('Unsupported file type')
@@ -64,7 +67,8 @@ const FileUpload = ({
         try {
             setUploading(true)
             console.log('uploading')
-            const data = await uploadToS3({ file, fileExtension: fileExtension ?? '' }, setProgress, abortUpload)
+            // const data = await uploadToS3({ file, fileExtension: fileExtension ?? '' }, setProgress, abortUpload)
+            const data = await uploadFileToS3(file, setProgress, abortUpload2)
             if (!data) {
                 toast.error('Error while uploading file. Try again')
                 return
@@ -99,6 +103,10 @@ const FileUpload = ({
 
     const abortUpload = async (upload: Upload) => {
         setUpload(upload);
+    }
+
+    const abortUpload2 = async (upload: AbortController) => {
+        setUpload2(upload);
     }
 
     const cancleOngoingUplaod = async (cancel: boolean) => {

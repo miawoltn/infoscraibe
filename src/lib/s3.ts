@@ -1,18 +1,20 @@
 
-import { AbortMultipartUploadCommand, CompleteMultipartUploadCommandOutput, DeleteObjectCommand, GetObjectCommand, GetObjectCommandInput, HeadObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { AbortMultipartUploadCommand, CompleteMultipartUploadCommandOutput, DeleteObjectCommand, GetObjectCommand, GetObjectCommandInput, HeadObjectCommand, PutObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import toast from 'react-hot-toast';
 import { v4 } from 'uuid';
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import mime from 'mime';
 
 const client = new S3Client({
     credentials: {
-        accessKeyId: process.env.NEXT_PUBLIC_S3_ACCESS_KEY_ID || '',
-        secretAccessKey: process.env.NEXT_PUBLIC_S3_SECRET_ACCESS_KEY || ''
+        accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || ''
     },
-    region: process.env.NEXT_PUBLIC_AWS_REGION
+    region: process.env.AWS_REGION
 })
 
-const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME
+const bucketName = process.env.S3_BUCKET_NAME
 
 const PART_SIZE = 5 * 1024 * 1024;
 
@@ -126,11 +128,24 @@ export const deleteFileFromS3 = async (
     }
 }
 
-export const getFileHeadFromS3 = async (bucketKey: string) => {
+export async function getFileHeadFromS3 (bucketKey: string) {
     const input: GetObjectCommandInput = {
         Bucket: bucketName,
         Key: bucketKey
     };
     const command = new HeadObjectCommand(input);
     return await client.send(command);
+}
+
+
+export async function getUploadUrl(fileName: string) {
+    const fileType = mime.getType(fileName) || '';
+    console.log({fileType})
+    const command = new PutObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: fileName,
+        ContentType: fileType
+    });
+
+  return await getSignedUrl(client, command, { expiresIn: 60 });
 }

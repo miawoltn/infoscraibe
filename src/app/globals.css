@@ -111,6 +111,11 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+
+  .scroll-area {
+    @apply scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 @keyframes fadeIn {
@@ -382,4 +387,16 @@ html, body {
 /* Smooth transitions */
 .height-transition {
   transition: height 200ms ease-in-out;
+}
+
+/* Prevent rubber-band scrolling on iOS */
+.overflow-y-auto {
+  overscroll-behavior-y: contain;
+}
+
+/* Better touch scrolling */
+@supports (-webkit-touch-callout: none) {
+  .h-screen {
+    height: -webkit-fill-available;
+  }
 }

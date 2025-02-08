@@ -29,7 +29,7 @@ export async function getContext(query: string, fileKey: string) {
         pageNumber: number
     }
 
-    let docs = qualifyingDocs?.map(match => (match.metadata as MetaData).text);
+    let docs = qualifyingDocs?.map(match => (match.metadata as MetaData));
 
-    return docs?.join('\n').substring(0, 3000);
+    return docs?.map((doc) => `${doc.pageNumber}. ${doc.text}`).join('\n') //.substring(0, 3000);
 }

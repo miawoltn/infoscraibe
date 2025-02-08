@@ -1,3 +1,4 @@
+'use client'
 import FileUpload from "@/components/FileUpload";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import SubscriptionButton from "@/components/SubscriptionButton";
@@ -5,27 +6,29 @@ import Typewriter from "@/components/Typewriter";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getChatById, getChatByUserId } from "@/lib/db";
 import { checkSubscription } from "@/lib/subscription";
-import { UserButton, auth, UserProfile } from "@clerk/nextjs";
+import { UserButton, auth, UserProfile, useUser } from "@clerk/nextjs";
 import { ArrowRight, ArrowRightIcon, LogIn } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
-export default async function Home() {
-  const { userId } = await auth();
-  const isAuth = !!userId;
-  const isPro = await checkSubscription();
-  let firstChat;
-  if(userId) {
-    firstChat = await getChatByUserId(userId);
+export default function Home() {
+  // const { userId } = await auth();
+  const { isSignedIn } = useUser()
+  const isAuth = !!isSignedIn;
+
+  if(isAuth) {
+    return redirect('/dashboard')
   }
   return (
-     <>
-      <MaxWidthWrapper className='mb-12 mt-10 sm:mt-40 flex flex-col items-center justify-center text-center'>
-        <h1 className='max-w-4xl text-2xl font-bold md:text-6xl lg:text-7xl'>
-          <Typewriter text="Access information in your documents in seconds." />
+     <Suspense>
+      <MaxWidthWrapper className='mb-12 mt-10 sm:md:mt-40 flex flex-col items-center justify-center text-center'>
+        <h1 className='max-w-4xl text-xl font-bold md:text-4xl lg:text-6xl'>
+          <Typewriter text="Access information from your documents in seconds." />
         </h1>
-        <p className='mt-5 max-w-prose text-zinc-500 sm:text-lg'>
-        With InfoScraibe, chat directly with any PDF. Upload your file and start asking questions instantly.
+        <p className='mt-5 max-w-prose text-zinc-500 dark:text-zinc-200 sm:text-base'>
+        With InfoScraibe, chat directly with you document. Upload your file and start asking questions instantly.
         </p>
 
         <Link
@@ -85,13 +88,13 @@ export default async function Home() {
       </div>
 
       {/* Feature section */}
-      <div className='mx-auto mb-32 mt-32 max-w-5xl sm:mt-56'>
+      <div className='mx-auto mb-32 mt-10 max-w-5xl sm:mt-56'>
         <div className='mb-12 px-6 lg:px-8'>
           <div className='mx-auto max-w-2xl sm:text-center'>
-            <h2 className='mt-2 font-bold text-4xl text-gray-900 sm:text-5xl'>
+            <h2 className='mt-2 font-bold text-4xl text-gray-900 dark:text-gray-200 sm:text-5xl'>
               Start chatting in minutes
             </h2>
-            <p className='mt-4 text-lg text-gray-600'>
+            <p className='mt-4 text-lg text-gray-600 dark:text-gray-300'>
             Interacting with your PDF files has never been simpler with InfoScraibe.
             </p>
           </div>
@@ -107,7 +110,7 @@ export default async function Home() {
               <span className='text-xl font-semibold'>
                 Sign up for an account
               </span>
-              <span className='mt-2 text-zinc-700'>
+              <span className='mt-2 text-zinc-700 dark:text-zinc-500'>
                   Start with a free plan or choose our{' '}
                 <Link
                   href='/pricing'
@@ -126,7 +129,7 @@ export default async function Home() {
               <span className='text-xl font-semibold'>
                 Upload your PDF file
               </span>
-              <span className='mt-2 text-zinc-700'>
+              <span className='mt-2 text-zinc-700 dark:text-zinc-500'>
                 We&apos;ll process your file and set it up for chatting.
               </span>
             </div>
@@ -139,7 +142,7 @@ export default async function Home() {
               <span className='text-xl font-semibold'>
                 Start asking questions
               </span>
-              <span className='mt-2 text-zinc-700'>
+              <span className='mt-2 text-zinc-700 dark:text-zinc-500'>
               It&apos;s that simple. Give InfoScraibe a try today – it takes less than a minute.
               </span>
             </div>
@@ -161,6 +164,6 @@ export default async function Home() {
           </div>
         </div>
       </div>
-    </>
+      </Suspense>
   );
 }

@@ -9,7 +9,7 @@ import MessageList from './MessageList'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { Message } from 'ai'
-import ChatInput from './ChatInput'
+import MessageInput from './MessageInput'
 import { Textarea } from './ui/textarea'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -19,6 +19,9 @@ type Props = {
 };
 
 const ChatComponent = ({ chatId }: Props) => {
+  const [mode, setMode] = useState<'multi' | 'single'>('single');
+  const [textareaRows, setTextareaRows] = useState(1);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ['chat', chatId],
@@ -27,6 +30,7 @@ const ChatComponent = ({ chatId }: Props) => {
       return response.data;
     }
   })
+  
   const { input, handleInputChange, handleSubmit, messages, isLoading: isAithinking, setInput } = useChat({
     api: '/api/chat',
     body: { chatId },
@@ -36,6 +40,9 @@ const ChatComponent = ({ chatId }: Props) => {
       setInput(input)
     }
   });
+
+  const sendMessage = (message: string) => {
+  }
 
   useEffect(() => {
     const messageContainer = document.getElementById('message-container');
@@ -48,16 +55,27 @@ const ChatComponent = ({ chatId }: Props) => {
 
   }, [messages])
 
+  useEffect(() => {
+    if (textareaRows >= 2 && input && mode === 'single') {
+      setMode('multi');
+    } else if (!input && mode === 'multi') {
+      setMode('single');
+    }
+  }, [textareaRows, mode, input]);
+
   const isButtonDisabled = isLoading || isAithinking || !!!input
 
   return (
-    <div className='flex flex-col h-dvh bg-white shadow shadow-black-400'>
+    <div className='flex flex-col h-dvh bg-white dark:bg-background shadow shadow-black-400'>
 
-      <div className='overflow-auto p-4 pb-28' id='message-container'>
+      <div className='overflow-auto p-4 mb-10 pb-10' id='message-container'>
         <MessageList messages={messages} isLoading={isLoading} />
       </div>
 
-      <form onSubmit={handleSubmit} className='fixed bottom-0 right-0 md:w-1/2 w-full p-1 bg-white shadow-black-400'>
+      {/* <div className='fixed bottom-0 overflow-auto bg-background pb-10 w-full'> */}
+      <MessageInput isAiThinking={isAithinking} loading={isButtonDisabled} message={input} handleSubmit={handleSubmit} handleInputChange={handleInputChange} />
+      {/* </div> */}
+      {/* <form onSubmit={handleSubmit} className='fixed bottom-0 right-0 md:w-2/3 w-full p-1 bg-white dark:bg-transparent shadow-black-400 px-10'>
         <p className={cn('animate-bounce items-center ml-7', {
           "hidden": isAithinking === false,
         })}> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ellipsis"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></p>
@@ -82,7 +100,7 @@ const ChatComponent = ({ chatId }: Props) => {
             <ArrowUp className='h-4 w-4' />
           </Button>
         </div>
-      </form>
+      </form> */}
     </div>
   )
 };

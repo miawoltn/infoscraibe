@@ -7,9 +7,12 @@ export const userSystemEnum = pgEnum('user_sytem_enum', ['system', 'user'])
 
 export const chats = pgTable('chats', {
     id: serial('id').primaryKey(),
-    pdfName: text('pdf_name').notNull(),
-    pdfUrl: text('pdf_url').notNull(),
+    fileName: text('file_name').notNull(),
+    fileUrl: text('file_url').notNull(),
+    fileType: text('file_type').notNull().default('application/pdf'),
+    checksum: varchar('checksum', {length: 256}),
     createdAt: timestamp('created_at').notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at'),
     userId: varchar('user_id', {length: 256}).notNull(),
     fileKey: text('file_key').notNull(),
 })
@@ -20,6 +23,7 @@ export const messages = pgTable('messages', {
     chatId: integer('chat_id').references(() => chats.id).notNull(),
     content: text('content').notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at'),
     role: userSystemEnum('role').notNull()
 })
 

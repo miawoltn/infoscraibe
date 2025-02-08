@@ -162,7 +162,15 @@ const FileUpload = ({
                 <DialogTrigger
                     onClick={() => setIsOpen(true)}
                     asChild>
-                    <Button>Upload Document</Button>
+                    <Button className="relative group overflow-hidden transform transition-all duration-200 
+        hover:scale-105 active:scale-95 hover:shadow-lg">
+        <div className="absolute inset-0 w-0 bg-gradient-to-r from-blue-500 to-purple-500 
+            transition-all duration-300 ease-out group-hover:w-full opacity-20" />
+        <span className="relative flex items-center gap-2">
+            <Cloud className="w-4 h-4 transition-transform group-hover:rotate-12" />
+            Upload Document
+        </span>
+    </Button>
                 </DialogTrigger>
 
                 <DialogContent>

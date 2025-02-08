@@ -8,7 +8,6 @@ import {
   Plus,
   Trash,
 } from 'lucide-react'
-import Skeleton from 'react-loading-skeleton'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { Button } from './ui/button'
@@ -19,6 +18,7 @@ import FileUpload from './FileUpload'
 import { getUserSubscriptionPlan } from '@/lib/stripe'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
 import toast from 'react-hot-toast'
+import { Skeleton } from './ui/skeleton'
 
 interface PageProps {
   subscriptionPlan: Awaited<ReturnType<typeof getUserSubscriptionPlan>>
@@ -100,9 +100,10 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
 
   if (isLoading) {
     return (
-      <div className="grid h-screen w-screen place-items-center">
-        <Loader2 className='w-6 h-6 animate-spin' />
-      </div>
+      // <div className="grid h-screen w-screen place-items-center">
+      //   <Loader2 className='w-6 h-6 animate-spin' />
+      // </div>
+        <Skeleton className='m-5 h-60 w-screen'/>
     )
   }
 
@@ -178,7 +179,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
             ))}
         </ul>
       ) : isLoading ? (
-        <Skeleton height={100} className='my-2' count={3} />
+        <Skeleton className='my-2 h-[100px]' />
       ) : (
         <div className='mt-16 flex flex-col items-center gap-2'>
           <Ghost className='h-8 w-8 text-zinc-800 dark:text-zinc-200' />

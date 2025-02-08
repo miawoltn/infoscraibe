@@ -14,7 +14,7 @@ if(!process.env.DATABASE_URL) {
 
 const sql: NeonQueryFunction<boolean, boolean> = neon(process.env.DATABASE_URL)
 
-const pg = postgres(process.env.DATABASE_URL, { max: 10})
+const pg = postgres(process.env.DATABASE_URL, { max: 2})
 
 
 export const db = drizzle(pg, { schema })

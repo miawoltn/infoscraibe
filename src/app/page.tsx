@@ -1,3 +1,4 @@
+'use client'
 import FileUpload from "@/components/FileUpload";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import SubscriptionButton from "@/components/SubscriptionButton";
@@ -5,21 +6,17 @@ import Typewriter from "@/components/Typewriter";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getChatById, getChatByUserId } from "@/lib/db";
 import { checkSubscription } from "@/lib/subscription";
-import { UserButton, auth, UserProfile } from "@clerk/nextjs";
+import { UserButton, auth, UserProfile, useUser } from "@clerk/nextjs";
 import { ArrowRight, ArrowRightIcon, LogIn } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
-export default async function Home() {
-  const { userId } = await auth();
-  const isAuth = !!userId;
-  // const isPro = await checkSubscription();
-  // let firstChat;
-  // if(userId) {
-  //   firstChat = await getChatByUserId(userId);
-  // }
+export default function Home() {
+  // const { userId } = await auth();
+  const { isSignedIn } = useUser()
+  const isAuth = !!isSignedIn;
 
   if(isAuth) {
     return redirect('/dashboard')

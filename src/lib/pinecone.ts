@@ -44,10 +44,12 @@ export async function loadS3IntoPinecone(fileKey: string, fileType: string) {
         // load the pdf
         const blob = new Blob([Buffer.from(pdfBase64!!, 'base64')]);
         // const pdfReader = new WebPDFLoader(blob);
+        console.log({blob})
+        console.log(extension)
         const pdfReader = getDocumentLoader(extension, blob);
         const pages = await pdfReader.load() as PDFPage[];
 
-        // console.dir({pages}, { depth: null })
+        console.log("pages", pages.length)
 
         // split and segment document
         const docs = await Promise.all(pages.map((page, index) => {
@@ -97,7 +99,7 @@ const prepareDocument = async (page: PDFPage) => {
     let { pageContent, metadata } = page
     pageContent = pageContent.replace(/\n/g, '')
     const splitter = new RecursiveCharacterTextSplitter({
-        chunkSize: 500, // reduce chunkSize from 1000 to 500
+        chunkSize: 1000, // reduce chunkSize from 1000 to 500
         chunkOverlap: 200,
     })
     const docs = await splitter.splitDocuments([

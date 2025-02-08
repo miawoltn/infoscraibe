@@ -108,8 +108,21 @@ export async function abortMultipartUpload(fileKey: string, uploadId: string) {
 }
 
 export function getS3Url(file_key: string) {
-    const url = `https://${bucketName}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${file_key}`;
+    const url = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${file_key}`;
     return url;
+}
+
+export async function getFileUrl(fileKey: string) {
+  const urlCommand: GetObjectCommandInput = {
+    Bucket: bucketName,
+    Key: fileKey,
+  };
+
+  const command = new GetObjectCommand(urlCommand);
+
+  const url = await getSignedUrl(client, command, { expiresIn: 3600 });
+
+  return url;
 }
 
 export const deleteFileFromS3 = async (

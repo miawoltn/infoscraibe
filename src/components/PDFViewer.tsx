@@ -36,6 +36,7 @@ import SimpleBar from 'simplebar-react'
 import PdfFullscreen from './PdfFullScreen'
 
 import Markdown from 'markdown-to-jsx'
+import { Skeleton } from './ui/skeleton'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`
 
@@ -91,7 +92,8 @@ const PDFViewer = ({ url }: PDFViewerProps) => {
     setValue('page', String(page))
   }
 
-  const { fileType } = getFileMetadata(url);
+  const { fileType } = getFileMetadata(url.split('?')[0]);
+  console.log({fileType})
 
   return (
     <div className='w-full h-auto bg-white dark:bg-transparent rounded-md shadow flex flex-col items-center border border-gray-500'>
@@ -209,8 +211,9 @@ const PDFViewer = ({ url }: PDFViewerProps) => {
                 <div ref={ref}>
                   <Document
                     loading={
-                      <div className='flex justify-center'>
-                        <Loader2 className='my-24 h-6 w-6 animate-spin' />
+                      <div className='flex justify-center h-full'>
+                        {/* <Loader2 className='my-24 h-6 w-6 animate-spin' /> */}
+                        <Skeleton className='m-5 h-60 w-full' />
                       </div>
                     }
                     onLoadError={() => {

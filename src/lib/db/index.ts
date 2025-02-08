@@ -1,7 +1,7 @@
 import { NeonQueryFunction, neon } from "@neondatabase/serverless"
 // import { drizzle } from "drizzle-orm/neon-http"
 import { drizzle } from "drizzle-orm/postgres-js"
-import { chats, messages, userSubscriptions } from "./schema"
+import { chats, messages, sharedChats, userSubscriptions } from "./schema"
 import * as schema from "./schema";
 import { and, eq, isNull, or } from "drizzle-orm"
 import postgres from 'postgres';
@@ -71,3 +71,7 @@ export const deleteChatById = async (chatId: number) => await db.update(chats).s
 export const deleteChatByFileKey = async (fileKey: string) => await db.update(chats).set({
     deletedAt: new Date()
 }).where(eq(chats.fileKey, fileKey));
+
+export const getSharedChatById = async (id: string) => await db.query.sharedChats.findFirst({
+    where: eq(sharedChats.id, id)
+})

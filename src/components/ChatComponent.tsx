@@ -63,46 +63,46 @@ const ChatComponent = ({ chatId }: Props) => {
     }
   }, [textareaRows, mode, input]);
 
-  const isButtonDisabled = isLoading || isAithinking || !!!input
+  const isButtonDisabled = (isLoading && !data) || isAithinking || !input.trim();
 
-  return (
-    <div className='flex flex-col h-dvh bg-white dark:bg-background shadow shadow-black-400'>
+//   return (
+//     <div className='flex flex-col h-dvh bg-white dark:bg-background shadow shadow-black-400'>
 
-      <div className='overflow-auto p-4 mb-10 pb-10' id='message-container'>
-        <MessageList messages={messages} isLoading={isLoading} />
-      </div>
+//       <div className='overflow-auto p-4 mb-10 pb-10' id='message-container'>
+//         <MessageList messages={messages} isLoading={isLoading} />
+//       </div>
 
-      {/* <div className='fixed bottom-0 overflow-auto bg-background pb-10 w-full'> */}
-      <MessageInput isAiThinking={isAithinking} loading={isButtonDisabled} message={input} handleSubmit={handleSubmit} handleInputChange={handleInputChange} />
-      {/* </div> */}
-      {/* <form onSubmit={handleSubmit} className='fixed bottom-0 right-0 md:w-2/3 w-full p-1 bg-white dark:bg-transparent shadow-black-400 px-10'>
-        <p className={cn('animate-bounce items-center ml-7', {
-          "hidden": isAithinking === false,
-        })}> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ellipsis"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></p>
-        <div className="flex flex-row items-center">
-          <Textarea
-            // ref={textareaRef}
-            disabled={isLoading}
-            rows={1}
-            value={input}
-            autoFocus={false}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && "form" in e.target) {
-                e.preventDefault();
-                (e.target.form as HTMLFormElement).requestSubmit();
-              }
-            }}
-            placeholder='Ask any question...'
-            className='min-h-[0] resize-none pr-12 text-base py-2 focus:ring-1 focus-visible:ring-1'
-          />
-          <Button disabled={isButtonDisabled} className='bg-blue-800 ml-2 rounded' variant='default'>
-            <ArrowUp className='h-4 w-4' />
-          </Button>
-        </div>
-      </form> */}
+//       {/* <div className='fixed bottom-0 overflow-auto bg-background pb-10 w-full'> */}
+//       <MessageInput isAiThinking={isAithinking} loading={isAithinking} message={input} handleSubmit={handleSubmit} handleInputChange={handleInputChange} />
+//       {/* </div> */}
+//     </div>
+//   )
+
+return (
+  <div className='flex flex-col h-full bg-white dark:bg-background shadow shadow-black-400'>
+    {/* Message container with proper padding and scroll containment */}
+    <div 
+      id='message-container'
+      className='flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700'
+      >
+      <MessageList messages={messages} isLoading={isLoading} />
     </div>
-  )
+
+    {/* Gradient overlay to fade content under input */}
+    <div className="h-32 bg-gradient-to-t from-white dark:from-background to-transparent pointer-events-none" />
+
+    {/* Input container with fixed positioning */}
+    <div className="absolute bottom-0 left-0 right-0">
+      <MessageInput 
+        isAiThinking={isAithinking} 
+        loading={isAithinking} 
+        message={input} 
+        handleSubmit={handleSubmit} 
+        handleInputChange={handleInputChange} 
+        />
+    </div>
+  </div>
+)
 };
 
 export default ChatComponent;

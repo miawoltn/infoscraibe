@@ -1,6 +1,6 @@
 import { timeStamp } from 'console';
 import { relations } from 'drizzle-orm';
-import {integer, pgEnum, pgTable, serial, text, timestamp, varchar} from 'drizzle-orm/pg-core'
+import {integer, pgEnum, pgTable, serial, text, timestamp, uuid, varchar} from 'drizzle-orm/pg-core'
 
 
 export const userSystemEnum = pgEnum('user_sytem_enum', ['system', 'user'])
@@ -35,6 +35,15 @@ export const userSubscriptions = pgTable('user_subscriptions', {
     stripePriceId: varchar('stripe_price_id', { length: 256 }),
     stripeCurrentPeriodEnd: timestamp('stripe_current_period_end')
 })
+
+export const sharedChats = pgTable('shared_chats', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    messages: text('messages').notNull(),
+    createdAt: timestamp('created_at').defaultNow(),
+    expiresAt: timestamp('expires_at'),
+    userId: text('user_id').notNull(),
+    chatId: text('chat_id').notNull(),
+  });
 
 export const chatRelations = relations(chats, ({ many }) => ({
     messages: many(messages),

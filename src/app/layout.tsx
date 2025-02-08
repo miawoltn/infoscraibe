@@ -32,7 +32,7 @@ export default function RootLayout({
       <Providers>
         <html lang="en" suppressHydrationWarning>
           <body  className={cn(
-            'min-h-screen font-sans antialiased light:grainy',
+            'min-h-screen font-sans antialiased light:grainy flex flex-col',
             montserrat.className
           )}>
             <ThemeProviderComponent>

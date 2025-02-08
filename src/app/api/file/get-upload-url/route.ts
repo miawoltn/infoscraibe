@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { getUploadUrl } from "@/lib/s3";
 import { currentUser } from "@clerk/nextjs";
 import { Params } from "next/dist/shared/lib/router/utils/route-matcher";

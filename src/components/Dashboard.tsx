@@ -100,10 +100,30 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
 
   if (isLoading) {
     return (
-      // <div className="grid h-screen w-screen place-items-center">
-      //   <Loader2 className='w-6 h-6 animate-spin' />
-      // </div>
-        <Skeleton className='m-5 h-60 w-screen'/>
+      <main className='mx-auto max-w-7xl md:p-10 w-full'>
+        {/* Header Skeleton */}
+        <div className='mt-0 flex flex-col items-center justify-between gap-4 border-b border-gray-200 pb-5 sm:flex-row sm:items-center sm:gap-0'>
+          <Skeleton className='h-12 w-48 mb-3' /> {/* Title skeleton */}
+          <Skeleton className='h-10 w-32' /> {/* Upload button skeleton */}
+        </div>
+  
+        {/* File List Skeleton */}
+        <div className='mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className='col-span-1 divide-y divide-gray-200 rounded-lg bg-white dark:bg-slate-800 shadow p-4'>
+              <div className='flex items-center space-x-4'>
+                <Skeleton className='h-8 w-8' /> {/* File icon skeleton */}
+                <Skeleton className='h-6 w-full' /> {/* Filename skeleton */}
+              </div>
+              <div className='pt-4 mt-4 grid grid-cols-3 gap-4'>
+                <Skeleton className='h-4 w-full' />
+                <Skeleton className='h-4 w-full' />
+                <Skeleton className='h-4 w-full' />
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
     )
   }
 

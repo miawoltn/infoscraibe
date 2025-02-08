@@ -58,6 +58,7 @@ const MessageInput = ({
           'flex items-center shadow-lg transition-all duration-200',
           'border border-gray-200 dark:border-gray-700',
           mode === 'multi' ? 'rounded-2xl p-4' : 'rounded-full p-2',
+          'max-w-[calc(100%-2rem)]' // Add max-width
         )}
       >
         <TextareaAutosize

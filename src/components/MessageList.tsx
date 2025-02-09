@@ -14,10 +14,12 @@ import axios from "axios";
 type Props = {
   messages: Message[];
   isLoading: boolean;
-  isShared?: boolean; // Add this new prop
+  isShared?: boolean; 
+  onRegenerate?: (messageId: string) => void;
+  regeneratingId?: string | null;
 };
 
-const MessageList = ({ messages, isLoading, isShared = true }: Props) => {
+const MessageList = ({ messages, isLoading, isShared = true, onRegenerate, regeneratingId }: Props) => {
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
 
@@ -187,10 +189,19 @@ const MessageList = ({ messages, isLoading, isShared = true }: Props) => {
                   {message.role === "system" && (
                     <>
                       <button
-                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                        title="Regenerate response"
+                          onClick={() => onRegenerate?.(message.id)}
+                          disabled={regeneratingId === message.id}
+                          className={cn(
+                              "p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors",
+                              regeneratingId === message.id && "animate-pulse"
+                          )}                        
+                          title="Regenerate response"
                       >
-                        <CornerUpRight className="h-4 w-4" />
+                        {regeneratingId === message.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <CornerUpRight className="h-4 w-4" />
+                        )}
                       </button>
                       <div className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
                       <div className="flex gap-1">

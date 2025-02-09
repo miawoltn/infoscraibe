@@ -23,6 +23,7 @@ export const db = drizzle(pg, { schema })
 
 export type UserSubscription = typeof userSubscriptions.$inferSelect | typeof userSubscriptions.$inferInsert
 export type Chats = typeof chats.$inferSelect | typeof chats.$inferInsert
+export type Messages = typeof messages.$inferSelect | typeof messages.$inferInsert
 
 export const insertChat = async (chat: Chats) => await db.insert(chats).values(chat);
 
@@ -75,3 +76,5 @@ export const deleteChatByFileKey = async (fileKey: string) => await db.update(ch
 export const getSharedChatById = async (id: string) => await db.query.sharedChats.findFirst({
     where: eq(sharedChats.id, id)
 })
+
+export const updateMessageById = async (id: number, content: string) => await db.update(messages).set({ content }).where(eq(messages.id, id));

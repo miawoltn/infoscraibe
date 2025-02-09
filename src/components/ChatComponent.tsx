@@ -21,7 +21,7 @@ type Props = {
 const ChatComponent = ({ chatId }: Props) => {
   const [mode, setMode] = useState<'multi' | 'single'>('single');
   const [textareaRows, setTextareaRows] = useState(1);
-
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['chat', chatId],
@@ -31,7 +31,7 @@ const ChatComponent = ({ chatId }: Props) => {
     }
   })
   
-  const { input, handleInputChange, handleSubmit, messages, isLoading: isAithinking, setInput } = useChat({
+  const { input, handleInputChange, handleSubmit, messages, isLoading: isAithinking, setInput, setMessages } = useChat({
     api: '/api/chat',
     body: { chatId },
     initialMessages: data || [],
@@ -41,8 +41,44 @@ const ChatComponent = ({ chatId }: Props) => {
     }
   });
 
-  const sendMessage = (message: string) => {
-  }
+  const handleRegenerate = async (messageId: string) => {
+    try {
+        setRegeneratingId(messageId);
+        const messageToRegenerate = messages.find(m => m.id === messageId);
+        if (!messageToRegenerate) return;
+
+        const response = await fetch('/api/chat/regenerate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                messages: messages.slice(0, messages.indexOf(messageToRegenerate) + 1),
+                chatId,
+                messageId
+            })
+        });
+
+        if (!response.ok) throw new Error('Failed to regenerate response');
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let content = '';
+
+        while (reader) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            content += decoder.decode(value);
+            
+            // Update message in real-time
+            setMessages(messages.map(m => m.id === messageId ? { ...m, content } : m));
+        }
+
+    } catch (error) {
+        toast.error('Failed to regenerate response');
+        console.error('Regeneration failed:', error);
+    } finally {
+        setRegeneratingId(null);
+    }
+};
 
   useEffect(() => {
     const messageContainer = document.getElementById('message-container');
@@ -85,14 +121,14 @@ return (
       id='message-container'
       className='flex-1 overflow-y-auto pb-32 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700'
       >
-      <MessageList messages={messages} isLoading={isLoading} />
+      <MessageList messages={messages} isLoading={isLoading} onRegenerate={handleRegenerate} regeneratingId={regeneratingId} />
     </div>
 
     {/* Gradient overlay to fade content under input */}
     <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white dark:from-background to-transparent pointer-events-none" />
 
     {/* Input container with fixed positioning */}
-    <div className="absolute bottom-0 left-0 right-0 mb-1">
+    <div className="absolute bottom-0 left-0 right-0">
       <MessageInput 
         isAiThinking={isAithinking} 
         loading={isAithinking} 

@@ -1,0 +1,56 @@
+import { Message, OpenAIStream, StreamingTextResponse } from 'ai';
+import { NextResponse } from 'next/server';
+import { db, getChatById, updateMessageById } from '@/lib/db';
+import { getContext } from '@/lib/context';
+import { openai } from '@/lib/openai';
+
+export async function POST(req: Request) {
+    try {
+        const { messages, chatId, messageId } = await req.json();
+        const chat = await getChatById(chatId);
+        if (!chat) return NextResponse.json({ 'error': 'chat not found' }, { status: 404 });
+        const fileKey = chat.fileKey;
+
+        const lastUserMessage = messages.slice(0, -1).reverse().find((m: { role: string; }) => m.role === 'user');
+        if (!lastUserMessage) {
+            return NextResponse.json({ error: 'No user message found' }, { status: 400 });
+        }
+
+        const context = await getContext(lastUserMessage.content, fileKey);
+        
+        const prompt = {
+            role: "system",
+            content: `AI assistant is a brand new, powerful, human-like artificial intelligence.
+            The traits of AI include expert knowledge, helpfulness, cleverness, and articulateness.
+            AI is a well-behaved and well-mannered individual.
+            AI is always friendly, kind, and inspiring, and he is eager to provide vivid and thoughtful responses to the user.
+            AI has the sum of all knowledge in their brain, and is able to accurately answer nearly any question about any topic in conversation.
+            AI assistant is a big fan of Pinecone and Vercel.
+            START CONTEXT BLOCK
+            ${context}
+            END OF CONTEXT BLOCK
+            AI assistant will take into account any CONTEXT BLOCK that is provided in a conversation.
+            If the context does not provide the answer to question, the AI assistant will say, "I'm sorry, but I don't know the answer to that question".
+            AI assistant will not apologize for previous responses, but instead will indicated new information was gained.
+            AI assistant will not invent anything that is not drawn directly from the context.
+            `,
+        };
+
+        const response = await openai.createChatCompletion({
+            model: 'gpt-4-turbo',
+            messages: [prompt, ...messages.slice(0, -1)],
+            stream: true
+        });
+
+        const stream = OpenAIStream(response, {
+            onCompletion: async (completion: string) => {
+                await updateMessageById(messageId, completion);
+            }
+        });
+
+        return new StreamingTextResponse(stream);
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}

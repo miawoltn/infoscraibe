@@ -78,3 +78,50 @@ export const getSharedChatById = async (id: string) => await db.query.sharedChat
 })
 
 export const updateMessageById = async (id: number, content: string) => await db.update(messages).set({ content }).where(eq(messages.id, id));
+
+export const getMessageById = async (id: number) => await db.query.messages.findFirst({
+    where:eq(messages.id, id)
+})
+
+
+export const updateMessageWithVersion = async (id: number, content: string) => {
+    const message = await db.query.messages.findFirst({
+        where: eq(messages.id, id)
+    });
+
+    if (!message) throw new Error('Message not found');
+    if (message.regenerationCount >= 3) throw new Error('Maximum regenerations reached');
+
+    // Store current content in previous versions
+    const previousVersions = message.previousVersions || [];
+    previousVersions.push(message.content);
+
+    const updatedMessage =  await db.update(messages)
+        .set({ 
+            content,
+            regenerationCount: message.regenerationCount + 1,
+            previousVersions
+        })
+        .where(eq(messages.id, id))
+        .returning();
+
+    return updatedMessage[0];
+};
+
+export const deleteMessageVersion = async (messageId: number, versionIndex: number) => {
+    const message = await db.query.messages.findFirst({
+        where: eq(messages.id, messageId)
+    });
+
+    if (!message || !message.previousVersions) throw new Error('Message or version not found');
+
+    const previousVersions = [...message.previousVersions];
+    previousVersions.splice(versionIndex, 1);
+
+    return await db.update(messages)
+        .set({ 
+            previousVersions,
+            regenerationCount: message.regenerationCount - 1
+        })
+        .where(eq(messages.id, messageId));
+};

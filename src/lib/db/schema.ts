@@ -24,7 +24,9 @@ export const messages = pgTable('messages', {
     content: text('content').notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     deletedAt: timestamp('deleted_at'),
-    role: userSystemEnum('role').notNull()
+    role: userSystemEnum('role').notNull(),
+    regenerationCount: integer('regeneration_count').notNull().default(0),
+    previousVersions: text('previous_versions').array(),
 })
 
 export const userSubscriptions = pgTable('user_subscriptions', {

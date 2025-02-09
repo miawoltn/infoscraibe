@@ -1,7 +1,11 @@
 import { cn } from "@/lib/utils";
-import { Message } from "ai/react";
+import { Message as BaseMessage } from "ai/react";
 import { Loader2, MessageCircleWarningIcon, Target } from "lucide-react";
 import React from "react";
+
+interface Message extends BaseMessage {
+  previousVersions?: string[];
+}
 import { Icons } from "./Icons";
 import { format, formatRelative, subDays } from "date-fns";
 import Markdown from "markdown-to-jsx";
@@ -17,11 +21,13 @@ type Props = {
   isShared?: boolean; 
   onRegenerate?: (messageId: string) => void;
   regeneratingId?: string | null;
+  onDeleteVersion?: (messageId: string, versionIndex: number) => void;
 };
 
-const MessageList = ({ messages, isLoading, isShared = true, onRegenerate, regeneratingId }: Props) => {
+const MessageList = ({ messages, isLoading, isShared = true, onRegenerate, regeneratingId, onDeleteVersion }: Props) => {
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const [showVersions, setShowVersions] = useState<string | null>(null);
 
   const handleCopy = async (content: string, messageId: string) => {
     try {
@@ -118,6 +124,7 @@ const MessageList = ({ messages, isLoading, isShared = true, onRegenerate, regen
         .map((message, index) => (
           <div
             key={message.id}
+            id={`message-${message.id}`}
             className={cn("group flex items-start gap-4 relative", {
               "animate-fadeIn": index === messages.length - 1,
             })}
@@ -220,6 +227,32 @@ const MessageList = ({ messages, isLoading, isShared = true, onRegenerate, regen
                       </div>
                     </>
                   )}
+                  {message.role === "system" && (message.previousVersions?.length || 0) > 0 && (
+                        <div className="mt-2">
+                            <button
+                                onClick={() => setShowVersions(showVersions === message.id ? null : message.id)}
+                                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                            >
+                                {showVersions === message.id ? 'Hide' : 'Show'} previous versions ({message.previousVersions?.length})
+                            </button>
+                            
+                            {showVersions === message.id && (
+                                <div className="mt-2 space-y-2">
+                                    {message.previousVersions?.map((version, idx) => (
+                                        <div key={idx} className="pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+                                            <Markdown>{version}</Markdown>
+                                            <button
+                                                onClick={() => onDeleteVersion?.(message.id, idx)}
+                                                className="text-xs text-red-500 hover:text-red-600 mt-1"
+                                            >
+                                                Delete version
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>)}
               </div>
             </div>

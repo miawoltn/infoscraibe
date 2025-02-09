@@ -1,22 +1,43 @@
 import { Message, OpenAIStream, StreamingTextResponse } from 'ai';
 import { NextResponse } from 'next/server';
-import { db, getChatById, updateMessageById } from '@/lib/db';
+import { db, getChatById, getMessageById, updateMessageById, updateMessageWithVersion } from '@/lib/db';
 import { getContext } from '@/lib/context';
 import { openai } from '@/lib/openai';
+import { auth } from '@clerk/nextjs';
 
 export async function POST(req: Request) {
+    const { userId } = auth();
+    if (!userId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     try {
-        const { messages, chatId, messageId } = await req.json();
+        const { messages, chatId, messageId, previousUserMessageId } = await req.json();
+
+        const message = await getMessageById(messageId);
+        
+        if (!message) {
+            return NextResponse.json({ error: 'Message not found' }, { status: 404 });
+        }
+        
+        // Check regeneration count
+        if (message.regenerationCount >= 3) {
+            return NextResponse.json({ 
+                error: 'Maximum regenerations reached. Please delete a version to continue.',
+                regenerationCount: message.regenerationCount,
+                previousVersions: message.previousVersions
+            }, { status: 400 });
+        }
+
         const chat = await getChatById(chatId);
         if (!chat) return NextResponse.json({ 'error': 'chat not found' }, { status: 404 });
         const fileKey = chat.fileKey;
 
-        const lastUserMessage = messages.slice(0, -1).reverse().find((m: { role: string; }) => m.role === 'user');
-        if (!lastUserMessage) {
-            return NextResponse.json({ error: 'No user message found' }, { status: 400 });
+        const previousUserMessage = messages.find((m: Message) => m.id === previousUserMessageId);
+        if (!previousUserMessage) {
+            return NextResponse.json({ error: 'Previous user message not found' }, { status: 400 });
         }
 
-        const context = await getContext(lastUserMessage.content, fileKey);
+        const context = await getContext(previousUserMessage.content, fileKey);
         
         const prompt = {
             role: "system",
@@ -44,7 +65,7 @@ export async function POST(req: Request) {
 
         const stream = OpenAIStream(response, {
             onCompletion: async (completion: string) => {
-                await updateMessageById(messageId, completion);
+                await updateMessageWithVersion(messageId, completion);
             }
         });
 

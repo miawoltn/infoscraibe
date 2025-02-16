@@ -10,6 +10,21 @@ import { getFileHeadFromS3 } from '@/lib/s3';
 
 // export const runtime = 'edge';
 // export const dynamic = "force-dynamic"
+export const maxDuration = 30;
+
+const formatMessages = (messages: Message[]) => {
+    return messages.map((msg: any) => {
+      if (msg.role === 'system' && msg.feedback) {
+        return {
+          ...msg,
+          content: `${msg.content}\n[Previous response was marked as ${msg.feedback} ${
+            msg.feedbackReason ? `: ${msg.feedbackReason}` : ''
+          }]`
+        };
+      }
+      return msg;
+    });
+  };
 
 export async function POST(req: Request) {
     try {
@@ -37,16 +52,18 @@ export async function POST(req: Request) {
             AI assistant will not invent anything that is not drawn directly from the context.
             `,
         };
+        const formattedMessages = formatMessages([prompt, ...messages]);
         const response = await openai.createChatCompletion({
             model: 'gpt-4-turbo',
-            messages: [prompt, ...messages], // include all messages for pro user
+            messages: formattedMessages, // include all messages for pro user
             stream: true
         });
         const stream = OpenAIStream(response,  {
-            onStart: async () => {
-                await db.insert(msgs).values({ chatId, content: lastMessage.content, role: 'user' });
-            },
+            // onStart: async () => {
+                
+            // },
             onCompletion: async (completion: string) => {
+                await db.insert(msgs).values({ chatId, content: lastMessage.content, role: 'user' });
                 await db.insert(msgs).values({ chatId, content: completion, role: 'system'})
             }
         });

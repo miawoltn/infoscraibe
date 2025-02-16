@@ -27,6 +27,8 @@ export const messages = pgTable('messages', {
     regenerationCount: integer('regeneration_count').notNull().default(0),
     previousVersions: text('previous_versions').array(),
     regenerationLabels: text('regeneration_labels').array(),
+    feedback: text('feedback'),  // 'like' | 'dislike' | null
+    feedbackReason: text('feedback_reason'),
 })
 
 export const userSubscriptions = pgTable('user_subscriptions', {

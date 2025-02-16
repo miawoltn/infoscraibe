@@ -221,6 +221,37 @@ const ChatComponent = ({ chatId }: Props) => {
     }
   };
 
+  const handleFeedback = async (
+    messageId: string,
+    feedback: "like" | "dislike" | null,
+    reason?: string
+  ) => {
+    try {
+      const response = await axios.post("/api/chat/feedback", {
+        messageId,
+        feedback,
+        reason,
+      });
+
+      // Update message in state
+      setMessages(
+        messages.map((m) =>
+          m.id === messageId ? { ...m, feedback, feedbackReason: reason } : m
+        )
+      );
+
+      if (feedback === "like" || feedback === "dislike") {
+        toast.success(
+          feedback === "like"
+            ? "Thanks for the feedback!"
+            : "Thank you for helping us improve"
+        );
+      }
+    } catch (error) {
+      toast.error("Failed to save feedback");
+    }
+  };
+
   useEffect(() => {
     if (shouldScrollToBottom && !regeneratingId) {
       const messageContainer = document.getElementById("message-container");
@@ -263,6 +294,7 @@ const ChatComponent = ({ chatId }: Props) => {
           onRegenerate={handleRegenerate}
           regeneratingId={regeneratingId}
           onDeleteVersion={handleDeleteVersion}
+          onFeedback={handleFeedback}
         />
       </div>
 

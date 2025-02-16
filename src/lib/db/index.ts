@@ -90,6 +90,8 @@ export const getMessageLabels = async (id: number) => await db.query.messages.fi
     }
 });
 
+export const updateMessageFeedback = async (id: number, feedback: string, feedbackReason: string) => await db.update(messages).set({ feedback, feedbackReason }).where(eq(messages.id, id)).returning();
+
 
 export const updateMessageWithVersion = async (id: number, content: string) => {
     const message = await db.query.messages.findFirst({

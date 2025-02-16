@@ -20,6 +20,14 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import VersionComparisonDialog from "./VersionComparisonDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
+import { Button } from "./ui/button";
 
 type Props = {
   messages: Message[];
@@ -28,6 +36,11 @@ type Props = {
   onRegenerate?: (messageId: string) => void;
   regeneratingId?: string | null;
   onDeleteVersion?: (messageId: string, versionIndex: number) => void;
+  onFeedback?: (
+    messageId: string,
+    feedback: "like" | "dislike" | null,
+    reason?: string
+  ) => void;
 };
 
 const MessageList = ({
@@ -37,6 +50,7 @@ const MessageList = ({
   onRegenerate,
   regeneratingId,
   onDeleteVersion,
+  onFeedback,
 }: Props) => {
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
@@ -54,6 +68,12 @@ const MessageList = ({
   const [comparisonMessage, setComparisonMessage] = useState<Message | null>(
     null
   );
+  const [feedbackMessage, setFeedbackMessage] = useState<{
+    id: string;
+    type: "like" | "dislike";
+  } | null>(null);
+  const [feedbackReason, setFeedbackReason] = useState("");
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
 
   const getCurrentContent = (message: Message) => {
     if (!message.previousVersions?.length) return message.content;
@@ -150,6 +170,28 @@ const MessageList = ({
     };
   };
 
+  const handleFeedback = async (
+    messageId: string,
+    type: "like" | "dislike"
+  ) => {
+    const message = messages.find((m) => m.id === messageId);
+    if (!message) return;
+
+    // Toggle feedback if already set
+    if (message.feedback === type) {
+      onFeedback?.(messageId, null);
+      return;
+    }
+
+    if (type === "dislike") {
+      // Show feedback modal for dislikes
+      setFeedbackMessage({ id: messageId, type });
+    } else {
+      // Direct feedback for likes
+      onFeedback?.(messageId, type);
+    }
+  };
+
   const MessageLoader = () => (
     <div className="flex-1 space-y-2 overflow-hidden px-1">
       <div className="animate-pulse space-y-2">
@@ -235,154 +277,243 @@ const MessageList = ({
                 <Icons.logo className="h-5 w-5" />
               )}
             </div>
-           {regeneratingId === message.id && !message.content ? (
-            <MessageLoader />
-           )
-            :(<div className={cn("flex-1 space-y-2 overflow-hidden px-1", {
-              "flex flex-col items-end": message.role === "user",
-            })}>
+            {regeneratingId === message.id && !message.content ? (
+              <MessageLoader />
+            ) : (
               <div
-                className={cn("prose dark:prose-invert", {
-                  "text-gray-900 dark:text-gray-100": message.role === "system",
-                  "bg-blue-500/10 dark:bg-blue-500/20 rounded-lg p-3": message.role === "user",
+                className={cn("flex-1 space-y-2 overflow-hidden px-1", {
+                  "flex flex-col items-end": message.role === "user",
                 })}
               >
-                <Markdown
-                  options={{
-                    overrides: {
-                      pre: {
-                        props: {
-                          className:
-                            "bg-slate-100 dark:bg-slate-800 rounded-lg p-4 my-2 overflow-x-auto",
-                        },
-                      },
-                      code: {
-                        props: {
-                          className:
-                            "bg-slate-100 dark:bg-slate-800 rounded px-1 py-0.5",
-                        },
-                      },
-                    },
-                  }}
+                <div
+                  className={cn("prose dark:prose-invert", {
+                    "text-gray-900 dark:text-gray-100":
+                      message.role === "system",
+                    "bg-blue-500/10 dark:bg-blue-500/20 rounded-lg p-3":
+                      message.role === "user",
+                  })}
                 >
-                  {getCurrentContent(message)}
-                </Markdown>
-              </div>
-              <div className={cn(
-        "flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400",
-        message.role === "user" && "flex-row-reverse"
-      )}>
-                {/* <span>
+                  <Markdown
+                    options={{
+                      overrides: {
+                        pre: {
+                          props: {
+                            className:
+                              "bg-slate-100 dark:bg-slate-800 rounded-lg p-4 my-2 overflow-x-auto",
+                          },
+                        },
+                        code: {
+                          props: {
+                            className:
+                              "bg-slate-100 dark:bg-slate-800 rounded px-1 py-0.5",
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    {getCurrentContent(message)}
+                  </Markdown>
+                </div>
+                <div
+                  className={cn(
+                    "flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400",
+                    message.role === "user" && "flex-row-reverse"
+                  )}
+                >
+                  {/* <span>
                   {format(new Date(message.createdAt || new Date()), "h:mm a")}
                 </span> */}
-                {isShared && (
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 transition-opacity",
-                      index === messages.length - 1
-                        ? "opacity-100"
-                        : "opacity-0 group-hover:opacity-100"
-                    )}
-                  >
-                    {" "}
-                    {message.role === "system" &&
-                      message.previousVersions?.length! > 0 && (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              handleVersionNavigation(message.id, "prev")
-                            }
-                            disabled={versionIndices[message.id] === 0}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md 
+                  {isShared && (
+                    <div
+                      className={cn(
+                        "flex items-center gap-2 transition-opacity",
+                        index === messages.length - 1
+                          ? "opacity-100"
+                          : "opacity-0 group-hover:opacity-100"
+                      )}
+                    >
+                      {" "}
+                      {message.role === "system" &&
+                        message.previousVersions?.length! > 0 && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() =>
+                                handleVersionNavigation(message.id, "prev")
+                              }
+                              disabled={versionIndices[message.id] === 0}
+                              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md 
             transition-colors disabled:opacity-50"
-                            title="Previous version"
-                          >
-                            <ChevronLeft className="h-4 w-4" />
-                          </button>
+                              title="Previous version"
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </button>
 
-                          <button
-                            onClick={() => setComparisonMessage(message)}
-                            className="px-2 py-1 text-xs text-blue-500 hover:text-blue-600 
+                            <button
+                              onClick={() => setComparisonMessage(message)}
+                              className="px-2 py-1 text-xs text-blue-500 hover:text-blue-600 
             hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
-                          >
-                            {/* {getVersionLabel(
+                            >
+                              {/* {getVersionLabel(
                               message,
                               (versionIndices[message.id] ??
                                 message.previousVersions?.length!) + 1
                             )} */}
-                            {(versionIndices[message.id] ??
-                                message.previousVersions?.length!) + 1} / {message.previousVersions?.length! + 1}
-                          </button>
+                              {(versionIndices[message.id] ??
+                                message.previousVersions?.length!) + 1}{" "}
+                              / {message.previousVersions?.length! + 1}
+                            </button>
 
-                          <button
-                            onClick={() =>
-                              handleVersionNavigation(message.id, "next")
-                            }
-                            disabled={
-                              (versionIndices[message.id] ?? message.previousVersions?.length) >=
-                              message.previousVersions?.length!
-                            }
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md 
+                            <button
+                              onClick={() =>
+                                handleVersionNavigation(message.id, "next")
+                              }
+                              disabled={
+                                (versionIndices[message.id] ??
+                                  message.previousVersions?.length) >=
+                                message.previousVersions?.length!
+                              }
+                              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md 
             transition-colors disabled:opacity-50"
-                            title="Next version"
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )}
-                    <button
-                      onClick={() => handleCopy(message)}
-                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                      title={
-                        copiedMessageId === message.id
-                          ? "Copied!"
-                          : "Copy message"
-                      }
-                    >
-                      {copiedMessageId === message.id ? (
-                        <CheckCheck className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </button>
-                    {message.role === "system" && (
-                      <>
-                        <button
-                          onClick={() => onRegenerate?.(message.id)}
-                          disabled={regeneratingId === message.id}
-                          className={cn(
-                            "p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors",
-                            regeneratingId === message.id && "animate-pulse"
-                          )}
-                          title="Regenerate response"
-                        >
-                          {regeneratingId === message.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <CornerUpRight className="h-4 w-4" />
-                          )}
-                        </button>
-                        <div className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
-                        <div className="flex gap-1">
+                              title="Next version"
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
+                      <button
+                        onClick={() => handleCopy(message)}
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+                        title={
+                          copiedMessageId === message.id
+                            ? "Copied!"
+                            : "Copy message"
+                        }
+                      >
+                        {copiedMessageId === message.id ? (
+                          <CheckCheck className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </button>
+                      {message.role === "system" && (
+                        <>
                           <button
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                            title="Good response"
+                            onClick={() => onRegenerate?.(message.id)}
+                            disabled={regeneratingId === message.id}
+                            className={cn(
+                              "p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors",
+                              regeneratingId === message.id && "animate-pulse"
+                            )}
+                            title="Regenerate response"
                           >
-                            <ThumbsUp className="h-4 w-4" />
+                            {regeneratingId === message.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <CornerUpRight className="h-4 w-4" />
+                            )}
                           </button>
-                          <button
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                            title="Bad response"
-                          >
-                            <ThumbsDown className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
+                          <div className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleFeedback(message.id, "like")}
+                              className={cn(
+                                "p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors",
+                                message.feedback === "like" && "text-green-500"
+                              )}
+                              title="Good response"
+                            >
+                              <ThumbsUp className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleFeedback(message.id, "dislike")
+                              }
+                              className={cn(
+                                "p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors",
+                                message.feedback === "dislike" && "text-red-500"
+                              )}
+                              title="Bad response"
+                            >
+                              <ThumbsDown className="h-4 w-4" />
+                            </button>
+                          </div>
+
+                          {/* Feedback Modal */}
+                          {feedbackMessage && (
+                            <Dialog
+                              open={!!feedbackMessage}
+                              onOpenChange={(open) => {
+                                if (!isSendingFeedback && !open) {
+                                  setFeedbackMessage(null);
+                                  setFeedbackReason("");
+                                }
+                              }}
+                            >
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>
+                                    What was wrong with this response?
+                                  </DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <textarea
+                                    className="w-full p-2 border rounded-md"
+                                    placeholder="Please provide details about what was incorrect or could be improved..."
+                                    rows={4}
+                                    onChange={(e) =>
+                                      setFeedbackReason(e.target.value)
+                                    }
+                                  />
+                                  <DialogFooter>
+                                    <Button
+                                      variant="ghost"
+                                      onClick={() => setFeedbackMessage(null)}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      onClick={async () => {
+                                        try {
+                                          setIsSendingFeedback(true);
+                                          onFeedback?.(
+                                            feedbackMessage.id,
+                                            feedbackMessage.type,
+                                            feedbackReason
+                                          );
+                                          setFeedbackMessage(null);
+                                          setFeedbackReason("");
+                                        } catch (error) {
+                                          console.error(
+                                            "Error sending feedback:",
+                                            error
+                                          );
+                                        } finally {
+                                          setIsSendingFeedback(false);
+                                        }
+                                      }}
+                                      disabled={isSendingFeedback}
+                                    >
+                                      {isSendingFeedback ? (
+                                        <>
+                                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                          Submitting...
+                                        </>
+                                      ) : (
+                                        "Submit Feedback"
+                                      )}
+                                    </Button>
+                                  </DialogFooter>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>)}
+            )}
           </div>
         ))}
       {comparisonMessage && (

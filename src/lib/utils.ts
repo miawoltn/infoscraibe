@@ -16,6 +16,8 @@ export interface Message extends BaseMessage {
   regenerationCount?: number;
   regenerationLabels?: string[];
   createdAt?: Date;
+  feedback?: 'like' | 'dislike' | null;
+  feedbackReason?: string;
 }
 
 export function cn(...inputs: ClassValue[]) {

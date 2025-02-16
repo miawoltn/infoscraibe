@@ -89,7 +89,6 @@ const PDFViewer = ({ url, onClose, showPDF }: PDFViewerProps) => {
   };
 
   const { fileType } = getFileMetadata(url.split("?")[0]);
-  console.log({ fileType });
 
   return (
     <div className="w-full h-full bg-white dark:bg-transparent rounded-md shadow flex flex-col">

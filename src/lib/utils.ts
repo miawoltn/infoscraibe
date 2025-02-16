@@ -3,9 +3,20 @@ import { twMerge } from "tailwind-merge"
 import mime from 'mime';
 import axios from "axios";
 import { v4 } from "uuid";
+import { openai } from '@/lib/openai';
+import { Message as BaseMessage } from "ai/react";
 
 export const DOCX_FILE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 export const PDF_FILE = "application/pdf";
+
+export interface Message extends BaseMessage {
+  id: string;
+  content: string;
+  previousVersions?: string[];
+  regenerationCount?: number;
+  regenerationLabels?: string[];
+  createdAt?: Date;
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -79,5 +90,43 @@ export async function uploadFileToS3(file: File, onProgress: (e: number) => any,
   } catch (error: any) {
     console.log({ error })
     Promise.reject(new Error(error.message))
+  }
+}
+
+export async function generateVersionLabel(newResponse: string, previousResponse: string): Promise<string> {
+  try {
+    const response = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a helpful assistant that compares two versions of text and provides a brief, concise label (2-4 words) describing how the new version differs from the previous one. Focus on key differences like detail level, technical depth, clarity, or focus area.'
+        },
+        {
+          role: 'user',
+          content: `Compare these two responses and provide a brief label for the new version:
+          
+          Previous version:
+          ${previousResponse}
+          
+          New version:
+          ${newResponse}`
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 20,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate version label');
+    }
+
+    const data = await response.json();
+    const label = data.choices[0]?.message?.content?.trim() || 'Alternative Version';
+    return label.replace(/["']/g, ''); // Remove any quotes from the label
+
+  } catch (error) {
+    console.error('Error generating version label:', error);
+    return 'Alternative Version';
   }
 }

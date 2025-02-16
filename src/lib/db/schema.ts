@@ -27,6 +27,7 @@ export const messages = pgTable('messages', {
     role: userSystemEnum('role').notNull(),
     regenerationCount: integer('regeneration_count').notNull().default(0),
     previousVersions: text('previous_versions').array(),
+    regenerationLabels: text('regeneration_labels').array(),
 })
 
 export const userSubscriptions = pgTable('user_subscriptions', {

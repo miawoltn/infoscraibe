@@ -83,6 +83,13 @@ export const getMessageById = async (id: number) => await db.query.messages.find
     where:eq(messages.id, id)
 })
 
+export const getMessageLabels = async (id: number) => await db.query.messages.findFirst({
+    where: eq(messages.id, id),
+    columns: {
+        regenerationLabels: true
+    }
+});
+
 
 export const updateMessageWithVersion = async (id: number, content: string) => {
     const message = await db.query.messages.findFirst({
@@ -124,4 +131,33 @@ export const deleteMessageVersion = async (messageId: number, versionIndex: numb
             regenerationCount: message.regenerationCount - 1
         })
         .where(eq(messages.id, messageId));
+};
+
+export const updateMessageWithVersionAndLabel = async (
+    id: number, 
+    content: string,
+    label: string
+) => {
+    const message = await db.query.messages.findFirst({
+        where: eq(messages.id, id)
+    });
+
+    if (!message) throw new Error('Message not found');
+    if (message.regenerationCount >= 3) throw new Error('Maximum regenerations reached');
+
+    const previousVersions = message.previousVersions || [];
+    const regenerationLabels = message.regenerationLabels || [];
+    
+    previousVersions.push(message.content);
+    regenerationLabels.push(label);
+
+    return await db.update(messages)
+        .set({ 
+            content,
+            regenerationCount: (message.regenerationCount || 0) + 1,
+            previousVersions,
+            regenerationLabels
+        })
+        .where(eq(messages.id, id))
+        .returning();
 };

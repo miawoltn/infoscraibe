@@ -409,3 +409,22 @@ html, body {
 .animate-regenerate {
   animation: regenerate-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Version comparison styles */
+.version-transition {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+.version-diff-highlight {
+  @apply bg-yellow-100 dark:bg-yellow-900/20;
+}
+
+/* Dialog animation */
+@keyframes dialogSlideIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.dialog-content {
+  animation: dialogSlideIn 0.2s ease-out;
+}

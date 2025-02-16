@@ -1,9 +1,10 @@
 import { Message, OpenAIStream, StreamingTextResponse } from 'ai';
 import { NextResponse } from 'next/server';
-import { db, getChatById, getMessageById, updateMessageById, updateMessageWithVersion } from '@/lib/db';
+import { db, getChatById, getMessageById, updateMessageById, updateMessageWithVersion, updateMessageWithVersionAndLabel } from '@/lib/db';
 import { getContext } from '@/lib/context';
 import { openai } from '@/lib/openai';
 import { auth } from '@clerk/nextjs';
+import { generateVersionLabel } from '../../../../lib/utils';
 
 export async function POST(req: Request) {
     const { userId } = auth();
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
         // Check regeneration count
         if (message.regenerationCount >= 3) {
             return NextResponse.json({ 
-                error: 'Maximum regenerations reached. Please delete a version to continue.',
+                error: 'Maximum regenerations reached (3 versions)',
                 regenerationCount: message.regenerationCount,
                 previousVersions: message.previousVersions
             }, { status: 400 });
@@ -59,13 +60,29 @@ export async function POST(req: Request) {
 
         const response = await openai.createChatCompletion({
             model: 'gpt-4-turbo',
-            messages: [prompt, ...messages.slice(0, -1)],
+            messages: [
+                prompt,
+                ...messages.slice(0, -1),
+                {
+                    role: 'system',
+                    content: 'Compare this response to the previous one and provide a brief label describing how it differs (e.g., "More detailed", "Simplified", "Technical focus")'
+                }
+            ],
             stream: true
         });
 
         const stream = OpenAIStream(response, {
             onCompletion: async (completion: string) => {
-                await updateMessageWithVersion(messageId, completion);
+                try {
+                    const label = await generateVersionLabel(completion, message.content);
+                    console.log('Generated label:', label);
+                    const updatedMessage = await updateMessageWithVersionAndLabel(messageId, completion, label);
+                    console.log('Updated message:', updatedMessage);
+                    completion = JSON.stringify({ content: completion, label });
+                    console.log({completion})
+                } catch (error) {
+                    console.error('Error updating message with label:', error);
+                }
             }
         });
 

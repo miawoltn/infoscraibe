@@ -11,19 +11,12 @@ import axios from "axios";
 import { Message as BaseMessage } from "ai";
 import MessageInput from "./MessageInput";
 import { Textarea } from "./ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, Message } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 type Props = {
   chatId: number;
 };
-
-interface Message extends BaseMessage {
-  previousVersions?: string[];
-  regenerationCount?: number;
-  id: string;
-  content: string;
-}
 
 const ChatComponent = ({ chatId }: Props) => {
   const [mode, setMode] = useState<"multi" | "single">("single");
@@ -59,7 +52,9 @@ const ChatComponent = ({ chatId }: Props) => {
     },
   }) as {
     input: string;
-    handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    handleInputChange: (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => void;
     handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
     messages: Message[];
     isLoading: boolean;
@@ -72,6 +67,23 @@ const ChatComponent = ({ chatId }: Props) => {
       setRegeneratingId(messageId);
       const messageToRegenerate = messages.find((m) => m.id === messageId);
       if (!messageToRegenerate) return;
+
+      // Store the current content before any changes
+      const currentContent = messageToRegenerate.content;
+      const currentVersions = messageToRegenerate.previousVersions || [];
+
+      // Clear the content immediately when regeneration starts
+      setMessages(
+        messages.map((m) =>
+          m.id === messageId
+            ? {
+                ...m,
+                content: "", // Clear content to show loader
+                previousVersions: [...(m.previousVersions || []), m.content],
+              }
+            : m
+        )
+      );
 
       // Find the last user message before this AI response
       const messageIndex = messages.findIndex((m) => m.id === messageId);
@@ -93,9 +105,6 @@ const ChatComponent = ({ chatId }: Props) => {
         messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
       }
 
-      // Store the current content before regeneration
-      const currentContent = messageToRegenerate.content;
-
       const response = await fetch("/api/chat/regenerate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -111,34 +120,84 @@ const ChatComponent = ({ chatId }: Props) => {
         const error = await response.json();
         if (error.regenerationCount >= 3) {
           toast.error("Please delete a previous version to continue");
-          return;
+        } else {
+          toast.error("Failed to regenerate response");
         }
-        throw new Error("Failed to regenerate response");
-      }
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let content = "";
-
-      while (reader) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        content += decoder.decode(value);
-
-        // Update message in real-time
+        // Restore the original content and versions
         setMessages(
           messages.map((m) =>
             m.id === messageId
               ? {
                   ...m,
-                  content,
-                  previousVersions: [
-                    ...(m.previousVersions || []),
-                    currentContent,
-                  ],
+                  content: currentContent,
+                  previousVersions: currentVersions,
                 }
               : m
           )
         );
+        return;
+      }
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let content = "";
+      let hasReceivedContent = false;
+
+      while (reader) {
+        try {
+          const { value, done } = await reader.read();
+          if (done) {
+            const messageResponse = await fetch(
+              `/api/get-messages/${messageId}`
+            );
+            if (messageResponse.ok) {
+              const { message } = await messageResponse.json();
+              setMessages(
+                messages.map((m) =>
+                  m.id === messageId
+                    ? {
+                        ...message,
+                      }
+                    : m
+                )
+              );
+            }
+            break;
+          }
+
+          content += decoder.decode(value);
+          hasReceivedContent = true;
+          console.log({ content });
+
+          // Update message in real-time
+          if (content.trim()) {
+            setMessages(
+              messages.map((m) =>
+                m.id === messageId
+                  ? {
+                      ...m,
+                      content,
+                      previousVersions: [...currentVersions, currentContent],
+                    }
+                  : m
+              )
+            );
+          }
+        } catch (streamError) {
+          console.error("Stream error:", streamError);
+          // Restore original state on stream error
+          setMessages(
+            messages.map((m) =>
+              m.id === messageId
+                ? {
+                    ...m,
+                    content: currentContent,
+                    previousVersions: currentVersions,
+                  }
+                : m
+            )
+          );
+          throw streamError;
+        }
       }
     } catch (error) {
       toast.error("Failed to regenerate response");

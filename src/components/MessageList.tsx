@@ -1,5 +1,4 @@
-import { cn } from "@/lib/utils";
-import { Message as BaseMessage } from "ai/react";
+import { cn, Message } from "@/lib/utils";
 import {
   ChevronLeft,
   ChevronRight,
@@ -23,25 +22,7 @@ import {
 import { useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
-import {
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialog,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "./ui/alert-dialog";
-
-interface Message extends BaseMessage {
-  previousVersions?: string[];
-  regenerationCount?: number;
-  regenerationLabels?: string[];
-  id: string;
-  content: string;
-}
+import VersionComparisonDialog from "./VersionComparisonDialog";
 
 type Props = {
   messages: Message[];
@@ -62,9 +43,19 @@ const MessageList = ({
 }: Props) => {
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
-  const [showVersions, setShowVersions] = useState<string | null>(null);
   const [versionIndices, setVersionIndices] = useState<Record<string, number>>(
-    {}
+    () => {
+      const initialIndices: Record<string, number> = {};
+      messages.forEach((message) => {
+        if (message.previousVersions?.length) {
+          initialIndices[message.id] = message.previousVersions.length;
+        }
+      });
+      return initialIndices;
+    }
+  );
+  const [comparisonMessage, setComparisonMessage] = useState<Message | null>(
+    null
   );
 
   const getCurrentContent = (message: Message) => {
@@ -136,8 +127,6 @@ const MessageList = ({
     }
   };
 
-  // ...existing code...
-
   const handleDeleteVersion = (messageId: string, versionIndex: number) => {
     const message = messages.find((m) => m.id === messageId);
     if (!message?.previousVersions) return {};
@@ -163,6 +152,16 @@ const MessageList = ({
       totalVersions,
     };
   };
+
+  const MessageLoader = () => (
+    <div className="flex-1 space-y-2 overflow-hidden px-1">
+      <div className="animate-pulse space-y-2">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+      </div>
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -221,14 +220,15 @@ const MessageList = ({
             id={`message-${message.id}`}
             className={cn("group flex items-start gap-4 relative", {
               "animate-fadeIn": index === messages.length - 1,
+              "flex-row-reverse": message.role === "user",
             })}
           >
             <div
               className={cn(
                 "flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md shadow-sm",
                 {
-                  "bg-blue-500 text-white": message.role === "user",
-                  "bg-slate-100 dark:bg-slate-800": message.role === "system",
+                  "bg-blue-500 text-white hidden": message.role === "user",
+                  "bg-slate-500 dark:bg-slate-800": message.role === "system",
                 }
               )}
             >
@@ -238,12 +238,16 @@ const MessageList = ({
                 <Icons.logo className="h-5 w-5" />
               )}
             </div>
-
-            <div className={cn("flex-1 space-y-2 overflow-hidden px-1")}>
+           {regeneratingId === message.id && !message.content ? (
+            <MessageLoader />
+           )
+            :(<div className={cn("flex-1 space-y-2 overflow-hidden px-1", {
+              "flex flex-col items-end": message.role === "user",
+            })}>
               <div
-                className={cn("prose dark:prose-invert max-w-none", {
+                className={cn("prose dark:prose-invert", {
                   "text-gray-900 dark:text-gray-100": message.role === "system",
-                  "text-blue-600 dark:text-blue-400": message.role === "user",
+                  "bg-blue-500/10 dark:bg-blue-500/20 rounded-lg p-3": message.role === "user",
                 })}
               >
                 <Markdown
@@ -267,10 +271,13 @@ const MessageList = ({
                   {getCurrentContent(message)}
                 </Markdown>
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <span>
+              <div className={cn(
+        "flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400",
+        message.role === "user" && "flex-row-reverse"
+      )}>
+                {/* <span>
                   {format(new Date(message.createdAt || new Date()), "h:mm a")}
-                </span>
+                </span> */}
                 {isShared && (
                   <div
                     className={cn(
@@ -281,6 +288,51 @@ const MessageList = ({
                     )}
                   >
                     {" "}
+                    {message.role === "system" &&
+                      message.previousVersions?.length! > 0 && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() =>
+                              handleVersionNavigation(message.id, "prev")
+                            }
+                            disabled={versionIndices[message.id] === 0}
+                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md 
+            transition-colors disabled:opacity-50"
+                            title="Previous version"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            onClick={() => setComparisonMessage(message)}
+                            className="px-2 py-1 text-xs text-blue-500 hover:text-blue-600 
+            hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+                          >
+                            {/* {getVersionLabel(
+                              message,
+                              (versionIndices[message.id] ??
+                                message.previousVersions?.length!) + 1
+                            )} */}
+                            {(versionIndices[message.id] ??
+                                message.previousVersions?.length!) + 1} / {message.previousVersions?.length! + 1}
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              handleVersionNavigation(message.id, "next")
+                            }
+                            disabled={
+                              (versionIndices[message.id] ?? message.previousVersions?.length) >=
+                              message.previousVersions?.length!
+                            }
+                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md 
+            transition-colors disabled:opacity-50"
+                            title="Next version"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                     <button
                       onClick={() => handleCopy(message)}
                       className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
@@ -330,143 +382,26 @@ const MessageList = ({
                         </div>
                       </>
                     )}
-                    {message.role === "system" &&
-                      (message.previousVersions?.length || 0) > 0 && (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              handleVersionNavigation(message.id, "prev")
-                            }
-                            disabled={versionIndices[message.id] === 0}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md 
-                    transition-colors disabled:opacity-50"
-                          >
-                            <ChevronLeft className="h-4 w-4" />
-                          </button>
-
-                          <span className="text-sm font-medium">
-                            {(versionIndices[message.id] ??
-                              message.previousVersions!.length) + 1}{" "}
-                            of {message.previousVersions!.length + 1}
-                          </span>
-
-                          <button
-                            onClick={() =>
-                              handleVersionNavigation(message.id, "next")
-                            }
-                            disabled={
-                              versionIndices[message.id] ===
-                              message.previousVersions!.length
-                            }
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md 
-                    transition-colors disabled:opacity-50"
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </button>
-
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <button
-                                className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-md 
-            transition-colors text-red-500 hover:text-red-600"
-                                title="Delete this version"
-                                disabled={
-                                  !message.previousVersions ||
-                                  message.previousVersions.length === 0
-                                }
-                              >
-                                <Trash
-                                  className={cn(
-                                    "h-4 w-4",
-                                    (!message.previousVersions ||
-                                      message.previousVersions.length === 0) &&
-                                      "opacity-50 cursor-not-allowed"
-                                  )}
-                                />
-                              </button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  {
-                                    handleDeleteVersion(
-                                      message.id,
-                                      versionIndices[message.id] ||
-                                        message.previousVersions!.length
-                                    ).title
-                                  }
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  {
-                                    handleDeleteVersion(
-                                      message.id,
-                                      versionIndices[message.id] ||
-                                        message.previousVersions!.length
-                                    ).description
-                                  }
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  className="bg-red-500 hover:bg-red-600 text-white"
-                                  onClick={async () => {
-                                    const info =
-                                      handleDeleteVersion(
-                                        message.id,
-                                        versionIndices[message.id] ||
-                                          message.previousVersions!.length
-                                      ) || {};
-
-                                    try {
-                                      toast.promise(
-                                        onDeleteVersion?.(
-                                          message.id,
-                                          info.version!
-                                        )!,
-                                        {
-                                          loading: "Deleting version...",
-                                          success:
-                                            info.totalVersions! <= 2
-                                              ? "Reverted to original response"
-                                              : `Version ${
-                                                  info.version! + 1
-                                                } deleted successfully`,
-                                          error: "Failed to delete version",
-                                        }
-                                      );
-
-                                      // Reset version index if needed
-                                      if (
-                                        info.version ===
-                                        info.totalVersions! - 1
-                                      ) {
-                                        setVersionIndices((prev) => ({
-                                          ...prev,
-                                          [message.id]: Math.max(
-                                            0,
-                                            (prev[message.id] || 0) - 1
-                                          ),
-                                        }));
-                                      }
-                                    } catch (error) {
-                                      console.error("Delete failed:", error);
-                                    }
-                                  }}
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      )}
                   </div>
                 )}
               </div>
-            </div>
+            </div>)}
           </div>
         ))}
+      {comparisonMessage && (
+        <VersionComparisonDialog
+          message={comparisonMessage}
+          isOpen={!!comparisonMessage}
+          onClose={() => setComparisonMessage(null)}
+          currentVersionIndex={
+            versionIndices[comparisonMessage.id] ??
+            comparisonMessage.previousVersions!.length
+          }
+          onNavigate={(direction) => {
+            handleVersionNavigation(comparisonMessage.id, direction);
+          }}
+        />
+      )}
     </div>
   );
 };

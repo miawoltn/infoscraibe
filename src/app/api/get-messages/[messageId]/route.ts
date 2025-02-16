@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs';
-import { db, getMessageById, getMessageLabels } from '@/lib/db';
-import { messages } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { getMessageById } from '@/lib/db';
 
 export async function GET(
     req: Request,

@@ -1,17 +1,11 @@
 "use client";
-import Link from "next/link";
-import React, { useEffect, useRef, useState } from "react";
-import { Button } from "./ui/button";
-import { PlusCircle, Send, Loader2, ArrowUp, Dot } from "lucide-react";
-import { Input } from "./ui/input";
+import React, { useEffect, useState } from "react";
 import { useChat } from "ai/react";
 import MessageList from "./MessageList";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { Message as BaseMessage } from "ai";
 import MessageInput from "./MessageInput";
-import { Textarea } from "./ui/textarea";
-import { cn, Message } from "@/lib/utils";
+import { Message } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 type Props = {

@@ -1,4 +1,3 @@
-import { timeStamp } from 'console';
 import { relations } from 'drizzle-orm';
 import {integer, pgEnum, pgTable, serial, text, timestamp, uuid, varchar} from 'drizzle-orm/pg-core'
 

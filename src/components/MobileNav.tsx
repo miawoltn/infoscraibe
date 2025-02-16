@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, Gem, Menu } from 'lucide-react'
+import { ArrowRight, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -13,7 +13,7 @@ const MobileNav = ({ isAuth, user, subscriptionPlan }: { isAuth: boolean, user: 
 
   useEffect(() => {
     if (isOpen) toggleOpen()
-  }, [pathname])
+  }, [pathname, isOpen])
 
   const closeOnCurrent = (href: string) => {
     if (pathname === href) {

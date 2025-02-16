@@ -1,6 +1,6 @@
 import { Message, OpenAIStream, StreamingTextResponse } from 'ai';
 import { NextResponse } from 'next/server';
-import { db, getChatById, getMessageById, updateMessageById, updateMessageWithVersion, updateMessageWithVersionAndLabel } from '@/lib/db';
+import { getChatById, getMessageById, updateMessageWithVersionAndLabel } from '@/lib/db';
 import { getContext } from '@/lib/context';
 import { openai } from '@/lib/openai';
 import { auth } from '@clerk/nextjs';

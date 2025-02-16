@@ -4,12 +4,9 @@ import {
   ChevronRight,
   Loader2,
   MessageCircleWarningIcon,
-  Target,
-  Trash,
 } from "lucide-react";
 import React from "react";
 import { Icons } from "./Icons";
-import { format, formatRelative, subDays } from "date-fns";
 import Markdown from "markdown-to-jsx";
 import {
   Copy,

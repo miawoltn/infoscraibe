@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import {integer, pgEnum, pgTable, serial, text, timestamp, uuid, varchar} from 'drizzle-orm/pg-core'
+import { decimal, integer, json, pgEnum, pgTable, serial, text, timestamp, uuid, varchar} from 'drizzle-orm/pg-core'
 
 
 export const userSystemEnum = pgEnum('user_sytem_enum', ['system', 'user'])
@@ -48,6 +48,26 @@ export const sharedChats = pgTable('shared_chats', {
     userId: text('user_id').notNull(),
     chatId: text('chat_id').notNull(),
   });
+
+export const userCredits = pgTable('user_credits', {
+    id: serial('id').primaryKey(),
+    userId: varchar('user_id', { length: 256 }).notNull().unique(),
+    credits: decimal('credits', { precision: 10, scale: 2 }).notNull().default('0.00'),
+    lastUpdated: timestamp('last_updated').notNull().defaultNow(),
+    reminderThreshold: decimal('reminder_threshold', { precision: 10, scale: 2 }),
+});
+
+export const creditTransactions = pgTable('credit_transactions', {
+    id: serial('id').primaryKey(),
+    userId: varchar('user_id', { length: 256 }).notNull(),
+    amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+    type: varchar('type', { length: 20 }).notNull(), // 'topup', 'chat', 'storage'
+    tokenCount: integer('token_count'), // For chat transactions
+    storageSize: decimal('storage_size', { precision: 10, scale: 2 }), // For storage transactions (in MB)
+    description: text('description'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    metadata: json('metadata')
+});
 
 export const chatRelations = relations(chats, ({ many }) => ({
     messages: many(messages),

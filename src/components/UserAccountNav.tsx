@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from './ui/avatar'
 import Image from 'next/image'
 import { Icons } from './Icons'
 import Link from 'next/link'
-import { Gem, LayoutDashboard, LogOut, Podcast, Settings, User } from 'lucide-react'
+import { CreditCard, Gem, LayoutDashboard, LogOut, Podcast, Settings, User } from 'lucide-react'
 import { Button } from './ui/button'
 import { SignOutButton } from '@clerk/nextjs'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
@@ -88,6 +88,14 @@ const UserAccountNav = async ({
               Dashboard
             </Link>
           </DropdownMenuItem>
+
+          <DropdownMenuItem asChild>
+          <Link className='cursor-pointer' href="/credit">
+            <CreditCard className="mr-2 h-4 w-4" />
+            Credits & Usage
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
 
           {/* <DropdownMenuSeparator /> */}
 

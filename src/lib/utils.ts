@@ -5,6 +5,7 @@ import axios from "axios";
 import { v4 } from "uuid";
 import { openai } from '@/lib/openai';
 import { Message as BaseMessage } from "ai/react";
+import { PRICING } from "./constants";
 
 export const DOCX_FILE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 export const PDF_FILE = "application/pdf";
@@ -132,3 +133,23 @@ export async function generateVersionLabel(newResponse: string, previousResponse
     return 'Alternative Version';
   }
 }
+
+/**
+ * Formats a number with commas as thousands separators
+ * @param value - Number to format
+ * @returns Formatted string
+ */
+export const formatNumber = (value: number): string => {
+  return new Intl.NumberFormat('en-NG', {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 0
+  }).format(value);
+};
+
+export const calculateMessageCost = (tokenCount: number) => {
+  return tokenCount * PRICING.TOKEN_TO_CREDITS;
+};
+
+export const calculateStorageCost = (fileSizeInMB: number) => {
+  return fileSizeInMB * PRICING.STORAGE_MB_TO_CREDITS;
+};

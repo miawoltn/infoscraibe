@@ -329,8 +329,8 @@ body.scroll-lock {
 
 /* Prevent page overflow */
 html, body {
-  height: 100vh;
-  overflow: hidden;
+  height: 100%;
+  overflow: auto; /* Change from hidden to auto */
 }
 
 /* Custom scrollbar styles */
@@ -427,4 +427,12 @@ html, body {
 
 .dialog-content {
   animation: dialogSlideIn 0.2s ease-out;
+}
+
+@layer utilities {
+  .content-area {
+    min-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }

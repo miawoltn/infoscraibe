@@ -23,17 +23,17 @@ export default function CreditsPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen">
-    <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-8">Credits & Usage</h1>
-      <div className="h-[calc(100vh-8rem)] overflow-y-auto">
-      <CreditsDashboard 
-        credits={Number(data?.credits || 0)}
-        threshold={Number(data?.threshold || 100)}
-        usageHistory={data?.usageHistory || []}
-      />
+    <div className="h-screen flex flex-col">
+      <div className="flex-1 overflow-hidden">
+        <div className="container mx-auto p-8">
+          <h1 className="text-2xl font-bold mb-8">Credits & Usage</h1>
+          <CreditsDashboard 
+            credits={Number(data?.credits || 0)}
+            threshold={Number(data?.threshold || 100)}
+            usageHistory={data?.usageHistory || []}
+          />
+        </div>
       </div>
-    </div>
     </div>
   )
 }

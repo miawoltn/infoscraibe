@@ -83,7 +83,7 @@ export function CreditsDashboard({ credits, threshold, usageHistory }: CreditsDa
     }
 
     return (
-        <div className="space-y-4 pb-8">
+        <div className="h-full overflow-y-auto">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 ">
             {/* Credits Overview */}
             <Card>

@@ -3,7 +3,7 @@ import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import Providers from "@/components/Provider";
-import {Toaster} from 'react-hot-toast'
+import { Toaster } from 'react-hot-toast'
 import Navbar from "@/components/Navbar";
 import { cn } from "@/lib/utils";
 import ThemeProviderComponent from "@/components/theme/Provider";
@@ -31,15 +31,19 @@ export default function RootLayout({
     <ClerkProvider>
       <Providers>
         <html lang="en" suppressHydrationWarning>
-          <body  className={cn(
+          <body className={cn(
             'min-h-screen font-sans antialiased light:grainy flex flex-col',
             montserrat.className
           )}>
             <ThemeProviderComponent>
-          <Toaster />
-          <Navbar />
-          {children}
-          </ThemeProviderComponent>
+              <div className="relative flex min-h-screen flex-col">
+                <Navbar />
+                <div className="relative flex min-h-screen flex-col">
+                  <Toaster />
+                  {children}
+                </div>
+              </div>
+            </ThemeProviderComponent>
           </body>
         </html>
       </Providers>

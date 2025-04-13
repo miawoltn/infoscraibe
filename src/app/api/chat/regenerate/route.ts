@@ -3,14 +3,10 @@ import { NextResponse } from 'next/server';
 import { getChatById, getMessageById, updateMessageWithVersionAndLabel } from '@/lib/db';
 import { getContext } from '@/lib/context';
 import { openai } from '@/lib/openai';
-import { auth } from '@clerk/nextjs';
 import { generateVersionLabel } from '../../../../lib/utils';
+import { protectRoute } from '../../../../lib/auth/utils';
 
-export async function POST(req: Request) {
-    const { userId } = auth();
-    if (!userId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export const POST = protectRoute(async (req: Request) => {
     try {
         const { messages, chatId, messageId, previousUserMessageId } = await req.json();
 
@@ -91,4 +87,4 @@ export async function POST(req: Request) {
         console.error(error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
-}
+})

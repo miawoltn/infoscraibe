@@ -5,9 +5,9 @@ import { db, deductCredits, deleteChatById, getChatById, getChatsByUserId, hasEn
 import { getContext } from '@/lib/context';
 import { openai } from '@/lib/openai';
 import { messages as msgs } from '@/lib/db/schema';
-import { auth, currentUser } from '@clerk/nextjs';
 import { getFileHeadFromS3 } from '@/lib/s3';
 import { calculateMessageCost } from '../../../lib/utils';
+import { getCurrentUser, protectRoute } from '../../../lib/auth/utils';
 
 // export const runtime = 'edge';
 // export const dynamic = "force-dynamic"
@@ -26,11 +26,8 @@ const formatMessages = (messages: Message[]) => {
     });
 };
 
-export async function POST(req: Request) {
-    const { userId } = auth();
-    if (!userId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export const POST = protectRoute(async (req: Request, user) => {
+    const userId = user?.id!;
     try {
         const { messages, chatId } = await req.json();
         // Estimate token usage (can be refined based on your needs)
@@ -40,10 +37,7 @@ export async function POST(req: Request) {
 
         // Check if user has enough credits
         if (!(await hasEnoughCredits(userId, estimatedCost))) {
-            return NextResponse.json({
-                error: 'Insufficient credits',
-                requiredAmount: estimatedCost
-            }, { status: 402 });
+            return NextResponse.json(`Insufficient credits. Additional ${estimatedCost} units is required.`, { status: 402 });
         }
 
         const chat = await getChatById(chatId);
@@ -136,10 +130,10 @@ export async function POST(req: Request) {
             { status: 500 }
         )
     }
-}
+})
 
-export async function GET(req: Request) {
-    const { userId } = auth()
+export const GET = protectRoute(async (req: Request, user) => {
+      const userId = user?.id!;
     if (!userId) {
         return NextResponse.json({ error: 'unauthorised' }, { status: 401 })
     }
@@ -154,14 +148,9 @@ export async function GET(req: Request) {
 
     })
     return NextResponse.json(chats);
-}
+})
 
-export async function DELETE(request: Request) {
-    const user = await currentUser()
-    const userId = user?.id;
-    if (!userId) {
-        return NextResponse.json({ error: 'unauthorised' }, { status: 401 })
-    }
+export const DELETE = protectRoute(async (request: Request) => {
     try {
         const { chatId } = await request.json();
 
@@ -182,4 +171,4 @@ export async function DELETE(request: Request) {
             { status: 500 }
         )
     }
-}
+})

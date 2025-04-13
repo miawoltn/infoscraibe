@@ -2,15 +2,10 @@ import { db } from "@/lib/db"
 import { chats } from "@/lib/db/schema"
 import { loadS3IntoPinecone } from "@/lib/pinecone"
 import { getS3Url } from "@/lib/s3"
-import { currentUser } from "@clerk/nextjs"
 import { NextResponse } from "next/server"
+import { protectRoute } from "../../../../lib/auth/utils"
 
-export async function POST(req: Request, res: Response) {
-    const user = await currentUser()
-    const userId = user?.id;
-    if (!userId) {
-        return NextResponse.json({ error: 'unauthorised' }, { status: 401 })
-    }
+export const POST = protectRoute(async (req: Request, user) => {
     try {
         const body = await req.json()
         const { fileKey, fileName, fileType, checksum } = body
@@ -25,7 +20,7 @@ export async function POST(req: Request, res: Response) {
             fileName,
             fileUrl: getS3Url(fileKey),
             checksum,
-            userId
+            userId: user?.id!,
         }).returning({
             insertedId: chats.id
         })
@@ -40,4 +35,4 @@ export async function POST(req: Request, res: Response) {
             { status: 500 }
         )
     }
-}
+})

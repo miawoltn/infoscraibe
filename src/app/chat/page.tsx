@@ -1,14 +1,18 @@
 import Dashboard from '@/components/Dashboard'
 import MaxWidthWrapper from '@/components/MaxWidthWrapper';
 import { getUserSubscriptionPlan } from '@/lib/stripe';
-import { auth } from '@clerk/nextjs';
 import { redirect } from 'next/navigation';
 import React from 'react'
+import { validateRequest } from '../../lib/auth/utils/validate-request';
+import { withAuth } from '../../lib/auth/utils/with-auth';
+import { getCurrentUser } from '../../lib/auth/utils';
 
 type Props = {}
 
 async function ChatsPage({}: Props) {
-    const { userId } = auth();
+     const user = await getCurrentUser();
+      const userId = user?.id!;
+      const isAuth = !!userId;
     if (!userId) return redirect('/sign-in');
 
     const subscriptionPlan = await getUserSubscriptionPlan()
@@ -19,4 +23,4 @@ async function ChatsPage({}: Props) {
   )
 }
 
-export default ChatsPage
+export default withAuth(ChatsPage)

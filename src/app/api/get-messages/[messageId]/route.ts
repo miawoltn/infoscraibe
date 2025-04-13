@@ -1,16 +1,11 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs';
 import { getMessageById } from '@/lib/db';
+import { protectRouteWithContext } from '../../../../lib/auth/utils';
 
-export async function GET(
+export const GET = protectRouteWithContext( async (
     req: Request,
-    { params }: { params: { messageId: string } }
-) {
-    const { userId } = auth();
-    if (!userId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    { params } 
+) => {
     try {
         const { messageId } = params;
         
@@ -27,4 +22,4 @@ export async function GET(
         console.error(error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
-}
+})

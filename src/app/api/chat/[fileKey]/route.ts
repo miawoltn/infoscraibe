@@ -1,21 +1,16 @@
 import { deleteChatByFileKey, getChatByUserIdAndChecksum } from "@/lib/db";
 import { getFileUrl } from "@/lib/s3";
-import { currentUser } from "@clerk/nextjs";
 import { Params } from "next/dist/shared/lib/router/utils/route-matcher";
 import { NextResponse } from "next/server";
+import { protectRouteWithContext } from "../../../../lib/auth/utils";
 
-export async function GET(req: Request, context: { params: Params }) {
+export const GET = protectRouteWithContext(async (req: Request, context: { params: Params }, user) => {
     try {
-        const user = await currentUser();
-        if (!user?.id) {
-            return NextResponse.json({ error: 'unauthorised' }, { status: 401 });
-        }
-
         const checksum = context.params.fileKey;
         if (!checksum) {
             return NextResponse.json({ error: 'mising identifier' }, { status: 400 });
         }
-        const currentChat = await getChatByUserIdAndChecksum(user.id, checksum);
+        const currentChat = await getChatByUserIdAndChecksum(user?.id!, checksum);
         if(!currentChat) {
             return NextResponse.json({ error: 'Not found' }, { status: 404 });
         }
@@ -26,15 +21,9 @@ export async function GET(req: Request, context: { params: Params }) {
         console.log({err})
         return NextResponse.json({ error: 'Something went wrong. Try again' }, { status: 500 })
     }
-}
+})
 
-export async function DELETE(request: Request, context: { params: Params }) {
-    const user = await currentUser()
-    const userId = user?.id;
-    if (!userId) {
-        return NextResponse.json({ error: 'unauthorised' }, { status: 401 })
-    }
-    
+export const DELETE = protectRouteWithContext(async (request: Request, context: { params: Params }) => {
     try {
         const fileKey = context.params.fileKey
 
@@ -55,4 +44,4 @@ export async function DELETE(request: Request, context: { params: Params }) {
             { status: 500 }
         )
     }
-}
+})

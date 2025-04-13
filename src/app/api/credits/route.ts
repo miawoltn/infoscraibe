@@ -1,19 +1,14 @@
 import { db } from '@/lib/db';
 import { creditTransactions, userCredits } from '@/lib/db/schema';
-import { auth } from '@clerk/nextjs';
 import { eq, sql } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { protectRoute } from '../../../lib/auth/utils';
 
-export async function GET(req: Request) {
-    const { userId } = auth();
-    if (!userId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+export const GET = protectRoute(async (req: Request, user) => {
     try {
         // Get user credits
         const credits = await db.query.userCredits.findFirst({
-            where: eq(userCredits.userId, userId)
+            where: eq(userCredits.userId, user?.id!)
         });
 
         // Get usage history grouped by date and type
@@ -24,7 +19,7 @@ export async function GET(req: Request) {
                 storageCredits: sql`SUM(CASE WHEN type = 'storage' THEN amount::numeric ELSE 0 END)`,
             })
             .from(creditTransactions)
-            .where(eq(creditTransactions.userId, userId))
+            .where(eq(creditTransactions.userId, user?.id!))
             .groupBy(sql`DATE(created_at)`)
             .orderBy(sql`DATE(created_at)`)
             .limit(30); // Last 30 days
@@ -41,4 +36,4 @@ export async function GET(req: Request) {
             { status: 500 }
         );
     }
-}
+})

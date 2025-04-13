@@ -41,7 +41,7 @@ const ChatComponent = ({ chatId }: Props) => {
     body: { chatId },
     initialMessages: (data || []) as Message[],
     onError: (error) => {
-      toast.error("Unable to process chat.");
+      toast.error(error?.message || "Unable to process chat.");
       setInput(input);
     },
   }) as {

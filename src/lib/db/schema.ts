@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { decimal, integer, json, pgEnum, pgTable, serial, text, timestamp, uuid, varchar} from 'drizzle-orm/pg-core'
+import { decimal, integer, json, pgEnum, pgTable, serial, text, timestamp, uuid, varchar, boolean, index} from 'drizzle-orm/pg-core'
 
 
 export const userSystemEnum = pgEnum('user_sytem_enum', ['system', 'user'])
@@ -76,3 +76,75 @@ export const chatRelations = relations(chats, ({ many }) => ({
 export const messagesRelations = relations(messages, ({ one }) => ({
 	chat: one(chats, { fields: [messages.chatId], references: [chats.id] }),
 }));
+
+export const authUser = pgTable('auth_user', {
+    id: text('id').primaryKey(),
+    googleId: varchar("google_id", { length: 255 }).unique(),
+    email: text('email').notNull().unique(),
+    name: text('name'),
+    imageUrl: text('image_url'),
+    hashedPassword: text('hashed_password'),
+    emailVerified: boolean('email_verified').default(false),
+    createdAt: timestamp('created_at').defaultNow(),
+},
+(t) => ([
+   index("user_email_idx").on(t.email),
+   index("user_google_idx").on(t.googleId)
+]),
+)
+
+export const authSession = pgTable('user_session', {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+        .notNull()
+        .references(() => authUser.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at').notNull()
+},
+(t) => ({
+    userIdx: index("session_user_idx").on(t.userId),
+  }),);
+
+export const authKey = pgTable('auth_key', {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+        .notNull()
+        .references(() => authUser.id, { onDelete: 'cascade' }),
+    hashedPassword: text('hashed_password')
+});
+
+// Update authRelations
+export const authRelations = relations(authUser, ({ many, one }) => ({
+    sessions: many(authSession),
+    keys: many(authKey),
+    chats: many(chats),
+    credits: many(userCredits),
+    subscriptions: many(userSubscriptions)
+}));
+
+export const passwordResets = pgTable('password_resets', {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+        .notNull()
+        .references(() => authUser.id, { onDelete: 'cascade' }),
+    token: text('token').notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    createdAt: timestamp('created_at').defaultNow()
+},
+(t) => ({
+    userIdx: index("password_token_user_idx").on(t.userId),
+  }),
+);
+
+export const emailVerification = pgTable('email_verification', {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+        .notNull()
+        .references(() => authUser.id, { onDelete: 'cascade' }),
+    token: text('token').notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    createdAt: timestamp('created_at').defaultNow()
+},
+(t) => ({
+    userIdx: index("verification_code_user_idx").on(t.userId),
+  }),
+)

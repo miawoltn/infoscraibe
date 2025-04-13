@@ -1,21 +1,16 @@
 import Link from 'next/link'
 import MaxWidthWrapper from './MaxWidthWrapper'
 import { Button, buttonVariants } from './ui/button'
-import { ArrowRight, LogIn } from 'lucide-react'
-import MobileNav from './MobileNav'
-import { UserButton, auth, SignInButton, SignOutButton, currentUser, RedirectToUserProfile, UserProfile } from '@clerk/nextjs'
+import { LogIn } from 'lucide-react'
 import { Icons } from './Icons'
 import UserAccountNav from './UserAccountNav'
-import { getUserSubscriptionPlan } from '@/lib/stripe'
-import ThemeSwitcher from './theme/Switcher'
+import dynamic from 'next/dynamic'
+import { validateRequest } from '../lib/auth/utils/validate-request'
 
 const Navbar = async () => {
-  const { userId } = auth();
-  const user = await currentUser();
+  const { user } = await validateRequest();
+  const userId = user?.id!;
   const isAuth = !!userId;
-
-  const subscriptionPlan = await getUserSubscriptionPlan()
-
 
   return (
     <nav className='sticky h-14 inset-x-0 top-0 z-30 w-full border-b border-gray-200 dark:border-gray-700 bg-white/75 dark:bg-transparent backdrop-blur-lg transition-all'>
@@ -28,9 +23,9 @@ const Navbar = async () => {
             <span>InfoScr<strong className='underline'>ai</strong>be</span>
           </Link>
 
-          <MobileNav user={{firstName: user?.firstName, lastName: user?.lastName, email: user?.emailAddresses[0].emailAddress, imageUrl: user?.imageUrl}} isAuth={isAuth} subscriptionPlan={subscriptionPlan} />
+          {/* <MobileNav user={{ name: user?.name, email: user?.email, imageUrl: user?.imageUrl}} isAuth={isAuth} /> */}
 
-          <div className='hidden items-center space-x-4 sm:flex'>
+          <div className=' items-center space-x-4 sm:flex'>
             {!isAuth ? (
               <>
                 <Link
@@ -61,16 +56,16 @@ const Navbar = async () => {
                   Dashboard
                 </Link> */}
 
-                <UserAccountNav
+                 <UserAccountNav
                   name={
-                    !user?.firstName || !user.lastName || !user.username
+                    !user?.name
                       ? 'Your Account'
-                      : `${user.firstName} ${user.lastName}`
+                      : `${user.name}`
                   }
-                  email={user?.emailAddresses[0].emailAddress ?? ''}
+                  email={user?.email?? ''}
                   imageUrl={user?.imageUrl ?? ''}
-                  subscriptionPlan={subscriptionPlan}
-                />              </>
+                />
+                </>
             )}
           </div>
         </div>

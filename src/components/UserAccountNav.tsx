@@ -1,3 +1,5 @@
+
+'use client'
 // import { getUserSubscriptionPlan } from '@/lib/stripe'
 import {
   DropdownMenu,
@@ -11,9 +13,9 @@ import { Avatar, AvatarFallback } from './ui/avatar'
 import Image from 'next/image'
 import { Icons } from './Icons'
 import Link from 'next/link'
-import { CreditCard, Gem, LayoutDashboard, LogOut, Podcast, Settings, User } from 'lucide-react'
+import { AlertTriangle, CreditCard, Gem, LayoutDashboard, LogOut, LogOutIcon, Podcast, Settings, User } from 'lucide-react'
 import { Button } from './ui/button'
-import { SignOutButton } from '@clerk/nextjs'
+// import { SignOutButton } from '@clerk/nextjs'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
@@ -21,20 +23,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { Separator } from './ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import ThemeSwitcher from './theme/Switcher'
+import { logout } from '../lib/auth/utils/logout'
+import { useState } from 'react'
+import toast from 'react-hot-toast'
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog'
+import SignoutConfirmation from './SignoutConfirmation'
 
 
 interface UserAccountNavProps {
   email: string | undefined
   name: string
-  imageUrl: string,
-  subscriptionPlan: any
+  imageUrl: string
 }
 
-const UserAccountNav = async ({
+const UserAccountNav = ({
   email,
   imageUrl,
   name,
-  subscriptionPlan
 }: UserAccountNavProps) => {
 
   return (
@@ -80,7 +85,7 @@ const UserAccountNav = async ({
             </div>
           </div>
 
-          {/* <DropdownMenuSeparator /> */}
+          <DropdownMenuSeparator />
 
           <DropdownMenuItem asChild>
             <Link className='cursor-pointer' href='/dashboard'>
@@ -91,7 +96,7 @@ const UserAccountNav = async ({
 
           <DropdownMenuItem asChild>
           <Link className='cursor-pointer' href="/credit">
-            <CreditCard className="mr-2 h-4 w-4" />
+            <CreditCard className="h-4 w-4 ml-1 mr-2" />
             Credits & Usage
           </Link>
         </DropdownMenuItem>
@@ -99,19 +104,6 @@ const UserAccountNav = async ({
 
           {/* <DropdownMenuSeparator /> */}
 
-          <DropdownMenuItem asChild>
-            {subscriptionPlan?.isSubscribed ? (
-              <Link className='cursor-pointer' href='/billing'>
-                <Podcast className='h-4 w-4 ml-1 mr-2' />
-                Manage Subscription
-              </Link>
-            ) : (
-              <Link className='cursor-pointer' href='/pricing'>
-                <Gem className='h-4 w-4 ml-1 mr-2' />
-                Upgrade{' '}
-              </Link>
-            )}
-          </DropdownMenuItem>
           <DialogTrigger asChild>
             <DropdownMenuItem asChild>
               <Link className='cursor-pointer' href={''}>
@@ -122,15 +114,22 @@ const UserAccountNav = async ({
           </DialogTrigger>
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem className='cursor-pointer'>
-            <SignOutButton>
+          <DialogTrigger asChild>
+            <DropdownMenuItem asChild>
               <Link className='cursor-pointer' href={''}>
-                <LogOut className='h-4 w-4 ml-1 mr-2' /> <span>Log out</span>
+                <LogOutIcon className='h-4 w-4 ml-1 mr-2' />
+                Signout
               </Link>
-            </SignOutButton>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
+            </DropdownMenuItem>
+          </DialogTrigger>
+
+          {/* <DropdownMenuItem>
+            <SignoutConfirmation />
+          </DropdownMenuItem>*/}
+        </DropdownMenuContent> 
       </DropdownMenu>
+
+       {/* S E T T I N G S  D I A L O G */}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
@@ -157,8 +156,123 @@ const UserAccountNav = async ({
           </TabsContent>
         </Tabs> */}
       </DialogContent>
+      
+       {/* S I G N O U T  D I A L O G */}
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Sign out?</DialogTitle>
+        </DialogHeader>
+        <DialogDescription>You will be redirected to the home page.</DialogDescription>
+         <SignoutConfirmation />
+      </DialogContent>
     </Dialog>
   )
 }
 
 export default UserAccountNav
+
+
+
+
+// 'use client';
+
+// import {
+//     DropdownMenu,
+//     DropdownMenuContent,
+//     DropdownMenuItem,
+//     DropdownMenuLabel,
+//     DropdownMenuSeparator,
+//     DropdownMenuTrigger,
+// } from "./ui/dropdown-menu";
+// import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+// import { useRouter } from "next/navigation";
+// import { LayoutDashboard, Link, Loader2, LogOut, Settings } from "lucide-react";
+// import { useState } from "react";
+// import { Button } from "./ui/button";
+
+// interface UserAccountNavProps {
+//   // user: {
+//       name: string | null;
+//       email: string;
+//       imageUrl: string | null;
+//       subscriptionPlan?: any;
+//       onLogout: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
+//   // };
+// }
+
+// export default function UserAccountNav({ name, email, imageUrl, onLogout }: UserAccountNavProps) {
+//   const router = useRouter();
+//   const [isLoading, setIsLoading] = useState(false);
+
+//   const handleSignOut = async () => {
+//       try {
+//           setIsLoading(true);
+//           const response = await fetch('/api/auth/logout', {
+//               method: 'POST',
+//           });
+
+//           if (!response.ok) {
+//               throw new Error('Failed to sign out');
+//           }
+
+//           router.push('/sign-in');
+//           router.refresh();
+//       } catch (error) {
+//           console.error('Sign out error:', error);
+//       } finally {
+//           setIsLoading(false);
+//       }
+//   };
+
+//   return (
+//       <DropdownMenu>
+//           <DropdownMenuTrigger asChild>
+//               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+//                   <Avatar>
+//                       <AvatarImage src={imageUrl ?? undefined} />
+//                       <AvatarFallback>{name ?? email}</AvatarFallback>
+//                   </Avatar>
+//               </Button>
+//           </DropdownMenuTrigger>
+//           <DropdownMenuContent align="end">
+//               <DropdownMenuLabel>
+//                   <div className="flex flex-col space-y-1">
+//                       <p className="text-sm font-medium">{name}</p>
+//                       <p className="text-xs text-muted-foreground">{email}</p>
+//                   </div>
+//               </DropdownMenuLabel>
+//               <DropdownMenuSeparator />
+//               <DropdownMenuItem asChild>
+//                   <Link href="/dashboard">
+//                       <LayoutDashboard className="mr-2 h-4 w-4" />
+//                       Dashboard
+//                   </Link>
+//               </DropdownMenuItem>
+//               <DropdownMenuItem asChild>
+//                   <Link href="/settings">
+//                       <Settings className="mr-2 h-4 w-4" />
+//                       Settings
+//                   </Link>
+//               </DropdownMenuItem>
+//               <DropdownMenuSeparator />
+//               <DropdownMenuItem 
+//                 //   onClick={() => {}}
+//                 //   disabled={isLoading}
+//                   className="text-red-600 focus:text-red-600"
+//               >
+//                   {/* {isLoading ? (
+//                       <>
+//                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+//                           Signing out...
+//                       </>
+//                   ) : ( */}
+//                       <>
+//                           {/* <LogOut className="mr-2 h-4 w-4" /> */}
+//                           Sign out
+//                       </>
+//                   {/* )} */}
+//               </DropdownMenuItem>
+//           </DropdownMenuContent>
+//       </DropdownMenu>
+//   );
+// }

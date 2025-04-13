@@ -1,7 +1,7 @@
 import { NeonQueryFunction, neon } from "@neondatabase/serverless"
 // import { drizzle } from "drizzle-orm/neon-http"
 import { drizzle } from "drizzle-orm/postgres-js"
-import { chats, creditTransactions, messages, sharedChats, userCredits, userSubscriptions } from "./schema"
+import { authSession, authUser, chats, creditTransactions, messages, sharedChats, userCredits, userSubscriptions } from "./schema"
 import * as schema from "./schema";
 import { and, eq, isNull, or, sql } from "drizzle-orm"
 import postgres from 'postgres';
@@ -14,7 +14,7 @@ if (!process.env.DATABASE_URL) {
 
 // const a: NeonQueryFunction<boolean, boolean> = neon(process.env.DATABASE_URL)
 
-const pg = postgres(process.env.DATABASE_URL, { max: 2 })
+export const pg = postgres(process.env.DATABASE_URL, { max: 2 })
 
 
 export const db = drizzle(pg, { schema })
@@ -24,6 +24,8 @@ export const db = drizzle(pg, { schema })
 export type UserSubscription = typeof userSubscriptions.$inferSelect | typeof userSubscriptions.$inferInsert
 export type Chats = typeof chats.$inferSelect | typeof chats.$inferInsert
 export type Messages = typeof messages.$inferSelect | typeof messages.$inferInsert
+export type AuthUser = typeof authUser.$inferSelect |typeof authUser.$inferInsert;
+export type AuthSession = typeof authSession.$inferSelect | typeof authSession.$inferInsert
 
 export const insertChat = async (chat: Chats) => await db.insert(chats).values(chat);
 
@@ -249,4 +251,26 @@ export const hasEnoughCredits = async (userId: string, requiredAmount: number) =
     // Convert both values to numbers for comparison
     const currentCredits = _userCredits ? parseFloat(_userCredits.credits as string) : 0;
     return currentCredits >= requiredAmount;
+};
+
+export const getUserByEmail = async(email :string) => await db.query.authUser.findFirst({
+    where: eq(authUser.email, email)
+});
+
+export const getUserById = async(id :string) => await db.query.authUser.findFirst({
+    where: eq(authUser.id, id)
+});
+
+export const getUserByGoogleIdOrEmail = async(googleId: string, email: string) => await db.query.authUser.findFirst({
+    where:  (table, { eq, or }) => or(eq(table.googleId, googleId), eq(table.email, email)),
+});
+
+export const createUser = async (user: AuthUser) =>  await db.insert(authUser).values(user).returning();
+
+export const updateUser = async (id: string, user: {}) => {
+    console.log({user})
+    await db
+.update(authUser)
+.set(user)
+.where(eq(authUser.id, id))
 };

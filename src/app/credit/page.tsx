@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { Loader2 } from 'lucide-react'
 
-export default function CreditsPage() {
+function CreditsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['credits'],
     queryFn: async () => {
@@ -24,7 +24,7 @@ export default function CreditsPage() {
 
   return (
     <div className="h-screen flex flex-col">
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1">
         <div className="container mx-auto p-8">
           <h1 className="text-2xl font-bold mb-8">Credits & Usage</h1>
           <CreditsDashboard 
@@ -37,3 +37,5 @@ export default function CreditsPage() {
     </div>
   )
 }
+
+export default (CreditsPage)

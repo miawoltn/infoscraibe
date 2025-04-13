@@ -1,14 +1,9 @@
 import { NextResponse } from 'next/server';
 import { deleteMessageVersion } from '@/lib/db';
-import { auth } from '@clerk/nextjs';
+import { protectRoute } from '../../../../lib/auth/utils';
 
-export async function POST(req: Request) {
+export const POST = protectRoute(async (req: Request) =>{
     try {
-        const { userId } = auth();
-        if (!userId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
         const { messageId, versionIndex } = await req.json();
 
         if (!messageId || typeof versionIndex !== 'number') {
@@ -26,4 +21,4 @@ export async function POST(req: Request) {
             { status: 500 }
         );
     }
-}
+})

@@ -1,14 +1,9 @@
 
 'use client'
 import ChatComponent from '@/components/ChatComponent';
-import ChatSideBar from '@/components/ChatSideBar';
 import PDFViewer from '@/components/PDFViewer';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { db, getChatByUserIdAndChatId, getChatByUserIdAndChecksum } from '@/lib/db';
-import { chats } from '@/lib/db/schema';
-import { checkSubscription } from '@/lib/subscription';
-import { auth, currentUser, useUser } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { ArrowLeft, FileText } from 'lucide-react';
@@ -16,6 +11,7 @@ import { redirect } from 'next/navigation';
 import React, { useState } from 'react'
 import { cn } from '../../../lib/utils';
 import Link from 'next/link';
+import { useAuth } from '../../../lib/auth/utils/context';
 
 type Props = {
     params: {
@@ -23,10 +19,12 @@ type Props = {
     }
 }
 
-const ChatPage =  ({ params: { chatId } }: Props) => {
+const ChatPage = ({ params: { chatId } }: Props) => {
+    const { user, isSignedIn, isLoading: isUserLoading } = useAuth();
+
     const [id, checksum] = decodeURIComponent(chatId).split(':')
     const [showPDF, setShowPDF] = useState(false);
-    const { data, isLoading, isError } = useQuery({
+    const { data, isLoading, isError, error } = useQuery({
         queryKey: ['checksum', checksum],
         queryFn: async () => {
           const response = await axios.get(`/api/chat/${checksum}`);
@@ -36,16 +34,16 @@ const ChatPage =  ({ params: { chatId } }: Props) => {
         staleTime: Infinity
     })
 
-    const { isSignedIn, isLoaded } = useUser();
+    
     // if(!isLoaded) {
     //     return <Skeleton className='m-5 h-60 w-full' />
     // }
 
-    if(!isSignedIn) {
+    if(!isSignedIn && !isUserLoading) {
         return redirect('/sign-in'); 
     }
 
-    if(isLoading || !isLoaded) {
+    if(isLoading || isUserLoading) {
         return (
             <div className='flex flex-col md:flex-row'>
                 {/* PDF Viewer Skeleton */}
@@ -86,7 +84,7 @@ const ChatPage =  ({ params: { chatId } }: Props) => {
                         />
                     </svg>
                     <h1 className="text-2xl font-semibold text-foreground">Unable to load chat</h1>
-                    <p className="text-muted-foreground">There was an error loading the chat. Please try again.</p>
+                    <p className="text-muted-foreground">{error?.message || 'There was an error loading the chat. Please try again.'}</p>
                 </div>
                 <div className="flex gap-3">
                     <Button 

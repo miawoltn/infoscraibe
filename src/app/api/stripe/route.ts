@@ -1,21 +1,15 @@
 import { getSubscriptionByUserId } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
-import { auth, currentUser } from "@clerk/nextjs"
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUser, protectRoute } from "../../../lib/auth/utils";
 
 const return_url = process.env.NEXT_BASE_URL + '/';
 export const dynamic = "force-dynamic"
 
-export const GET = async () => {
+export const GET = protectRoute( async (req, user) => {
     try {
-        const { userId } = auth();
-        const user = await currentUser();
 
-        if(!userId) {
-            return new NextResponse('unauthorized', { status: 401 });
-        }
-
-        const sub = await getSubscriptionByUserId(userId);
+        const sub = await getSubscriptionByUserId(user?.id!);
         if(sub?.stripeCustomerId) {
             // cancel billing
             const stripeSession = await stripe.billingPortal.sessions.create({
@@ -33,7 +27,7 @@ export const GET = async () => {
             payment_method_types: ['card'],
             mode: 'subscription',
             billing_address_collection: 'auto',
-            customer_email: user?.emailAddresses[0].emailAddress,
+            customer_email: user?.email,
             line_items: [
                 {
                     price_data: {
@@ -50,7 +44,7 @@ export const GET = async () => {
                 }
             ],
             metadata: {
-                userId
+                userId: user?.id!
             }
         })
 
@@ -59,4 +53,4 @@ export const GET = async () => {
         console.log(error);
         return new NextResponse('internal server error', { status: 500 });
     }
-}
+})

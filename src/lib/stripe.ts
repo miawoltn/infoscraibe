@@ -1,8 +1,8 @@
 import { PLANS } from '@/config/pricing';
-import { auth, currentUser } from '@clerk/nextjs';
 import Stripe from 'stripe'
 import { db, getSubscriptionByUserId } from './db';
 import { getSubscription } from './paystack';
+import { validateRequest } from './auth/utils/validate-request';
 
 export const stripe = new Stripe(process.env.STRIPE_API_KEY as string, {
     apiVersion: '2023-10-16',
@@ -10,8 +10,9 @@ export const stripe = new Stripe(process.env.STRIPE_API_KEY as string, {
 });
 
 export async function getUserSubscriptionPlan() {
-    const user = await currentUser();
-    const userId = user?.emailAddresses[0].emailAddress;
+     const { user } = await validateRequest();
+      const userId = user?.id!;
+      const isAuth = !!userId;
 
     if (!userId) {
       return {

@@ -1,3 +1,12 @@
+export const APP_TITLE = 'InfoScraibe';
+export const EMAIL_SENDER = 'InfoScraibe <infoscraibe@no-reply.infoscraibe.com>';
+export const Paths = {
+    SIGN_UP: '/sign-up',
+    SIGN_IN: '/sign-in',
+    VERIFY_EMAIL: '/verify_email',
+    RESET_PASSWORD: 'reset-password',
+    DASHBOARD: '/dashboard'
+}
 export const PRICING = {
     // OpenAI costs (in USD)
     GPT4_INPUT: 0.01, // per 1K tokens

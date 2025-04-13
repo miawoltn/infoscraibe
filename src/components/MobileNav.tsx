@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 
-const MobileNav = ({ isAuth, user, subscriptionPlan }: { isAuth: boolean, user: any, subscriptionPlan: any }) => {
+const MobileNav = ({ isAuth, user }: { isAuth: boolean, user: any }) => {
   const [isOpen, setOpen] = useState<boolean>(false)
   const toggleOpen = () => setOpen((prev) => !prev)
   const pathname = usePathname()
@@ -29,15 +29,14 @@ const MobileNav = ({ isAuth, user, subscriptionPlan }: { isAuth: boolean, user: 
   const MenuIfSignedIn = () => {
     return (
       <UserAccountNav
-        name={
-          !user.firstName || !user.lastName || !user.username
-            ? 'Your Account'
-            : `${user.firstName} ${user.lastName}`
-        }
-        email={user.email ?? ''}
-        imageUrl={user.imageUrl ?? ''}
-        subscriptionPlan={subscriptionPlan}
-      />
+      name={
+        !user?.name
+          ? 'Your Account'
+          : `${user.name}`
+      }
+      email={user?.email?? ''}
+      imageUrl={user?.imageUrl ?? ''}
+    />
     )
   }
 

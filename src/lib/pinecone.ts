@@ -1,8 +1,8 @@
 
 import { Pinecone, PineconeRecord } from '@pinecone-database/pinecone'
 import { downloadFromS3 } from './s3';
-import { WebPDFLoader } from "langchain/document_loaders/web/pdf";
-import { DocxLoader } from "langchain/document_loaders/fs/docx";
+import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
+import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
 import { Document, RecursiveCharacterTextSplitter } from '@pinecone-database/doc-splitter'
 import { getEmbeddings } from './embeddings';
 import md5 from 'md5';

@@ -1,16 +1,11 @@
 import { db } from "@/lib/db";
 import { sharedChats } from "@/lib/db/schema";
-import { auth } from "@clerk/nextjs";
 import { add } from "date-fns";
 import { NextRequest, NextResponse } from "next/server";
+import { protectRoute } from "../../../../lib/auth/utils";
 
-export async function POST(req: NextRequest) {
+export const POST = protectRoute(async (req: Request, user) => {
   try {
-    const { userId } = auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { messages, chatId } = await req.json();
 
     // Create a new shared chat that expires in 7 days
@@ -18,7 +13,7 @@ export async function POST(req: NextRequest) {
       .insert(sharedChats)
       .values({
         messages: JSON.stringify(messages),
-        userId,
+        userId: user?.id!,
         chatId,
         expiresAt: add(new Date(), { days: 7 }),
       })
@@ -34,4 +29,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+})

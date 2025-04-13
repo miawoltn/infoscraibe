@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
-import Providers from "@/components/Provider";
+import QueryProvider from "@/components/providers/QueryProvider";
 import { Toaster } from 'react-hot-toast'
 import Navbar from "@/components/Navbar";
 import { cn } from "@/lib/utils";
-import ThemeProviderComponent from "@/components/theme/Provider";
+import ThemeProviderComponent from "@/components/providers/ThemeProvider";
+import { AuthProvider } from "../components/providers/AuthProvider";
+import { getCurrentUser } from "../lib/auth/utils";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,14 +23,15 @@ export const metadata: Metadata = {
   description: "Chat with any your documents using AI",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  
   return (
-    <ClerkProvider>
-      <Providers>
+    <AuthProvider>
+      <QueryProvider>
         <html lang="en" suppressHydrationWarning>
           <body className={cn(
             'min-h-screen font-sans antialiased light:grainy flex flex-col',
@@ -46,7 +48,7 @@ export default function RootLayout({
             </ThemeProviderComponent>
           </body>
         </html>
-      </Providers>
-    </ClerkProvider>
+      </QueryProvider>
+    </AuthProvider>
   );
 }

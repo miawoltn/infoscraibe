@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import crypto from 'crypto'
 import { NextResponse } from "next/server";
 import { addCredits, insertSubscription, updateSubscriptionBySubId } from "@/lib/db";
-// investigate webhook, not updating record.
+
 export const POST = async (req: Request) => {
     try {
         const body = await req.json();

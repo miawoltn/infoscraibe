@@ -1,15 +1,9 @@
 import { NextResponse } from 'next/server';
-import { auth, currentUser } from '@clerk/nextjs';
 import { initialisePayment } from '../../../../lib/paystack';
 import { PRICING } from '../../../../lib/constants';
+import { protectRoute } from "@/lib/auth/utils/protect-route";
 
-export async function POST(req: Request) {
-    const { userId } = auth();
-    const user = await currentUser();
-    if (!userId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+export const POST = protectRoute(async (req, user) => {
     try {
         const { amount } = await req.json();
         
@@ -24,9 +18,9 @@ export async function POST(req: Request) {
         // Initialize Paystack transaction
         const paymentUrl = await initialisePayment({
             amount,
-            email: user?.emailAddresses[0].emailAddress!,
+            email: user?.email!,
             metadata: {
-                userId,
+                userId: user?.id || '',
                 credits,
                 type: 'topup'
             }
@@ -40,4 +34,4 @@ export async function POST(req: Request) {
             { status: 500 }
         );
     }
-}
+})

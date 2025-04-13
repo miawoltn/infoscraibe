@@ -56,7 +56,7 @@ export function SignUpForm() {
             <Button variant="outline" className="w-full" asChild>
                 <Link href="/sign-in/google" prefetch={false}>
                     {/* <Ube className="mr-2 h-5 w-5" /> */}
-                    Log in with Google
+                    Signup with Google
                 </Link>
             </Button>
             <div className="my-2 flex items-center">

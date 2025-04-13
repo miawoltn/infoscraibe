@@ -100,9 +100,9 @@ export const authSession = pgTable('user_session', {
         .references(() => authUser.id, { onDelete: 'cascade' }),
     expiresAt: timestamp('expires_at').notNull()
 },
-(t) => ({
-    userIdx: index("session_user_idx").on(t.userId),
-  }),);
+(t) => ([
+    index("session_user_idx").on(t.userId),
+  ]),);
 
 export const authKey = pgTable('auth_key', {
     id: text('id').primaryKey(),
@@ -113,13 +113,13 @@ export const authKey = pgTable('auth_key', {
 });
 
 // Update authRelations
-export const authRelations = relations(authUser, ({ many, one }) => ({
-    sessions: many(authSession),
-    keys: many(authKey),
-    chats: many(chats),
-    credits: many(userCredits),
-    subscriptions: many(userSubscriptions)
-}));
+// export const authRelations = relations(authUser, ({ many, one }) => ({
+//     sessions: many(authSession),
+//     keys: many(authKey),
+//     chats: many(chats),
+//     credits: many(userCredits),
+//     subscriptions: many(userSubscriptions)
+// }));
 
 export const passwordResets = pgTable('password_resets', {
     id: text('id').primaryKey(),

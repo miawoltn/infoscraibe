@@ -1,18 +1,13 @@
 // 'use client'
 import FileUpload from "@/components/FileUpload";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
-import SubscriptionButton from "@/components/SubscriptionButton";
 import Typewriter from "@/components/Typewriter";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { getChatById, getChatByUserId } from "@/lib/db";
-import { checkSubscription } from "@/lib/subscription";
-// import { UserButton, auth, UserProfile, useUser } from "@clerk/nextjs";
 import { ArrowRight, ArrowRightIcon, LogIn } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { useAuth } from "../lib/auth/utils/context";
 import { validateRequest } from "../lib/auth/utils/validate-request";
 
 export default async function Home() {

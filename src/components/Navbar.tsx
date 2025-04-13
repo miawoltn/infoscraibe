@@ -28,14 +28,14 @@ const Navbar = async () => {
           <div className=' items-center space-x-4 sm:flex'>
             {!isAuth ? (
               <>
-                <Link
+                {/* <Link
                   href='/pricing'
                   className={buttonVariants({
                     variant: 'ghost',
                     size: 'sm',
                   })}>
                   Pricing
-                </Link>
+                </Link> */}
                 <Link href='sign-in'>
                 <Button className={buttonVariants({
                     variant: 'ghost',

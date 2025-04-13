@@ -7,6 +7,15 @@ export const Paths = {
     RESET_PASSWORD: 'reset-password',
     DASHBOARD: '/dashboard'
 }
+
+export const AUTH_ERRORS = {
+    INVALID_REQUEST: "Invalid authentication request",
+    EMAIL_NOT_VERIFIED: "Email not verified with Google",
+    GOOGLE_AUTH_FAILED: "Google authentication failed",
+    MISSING_PARAMS: "Missing authentication parameters",
+    INVALID_STATE: "Invalid authentication state",
+} as const;
+
 export const PRICING = {
     // OpenAI costs (in USD)
     GPT4_INPUT: 0.01, // per 1K tokens

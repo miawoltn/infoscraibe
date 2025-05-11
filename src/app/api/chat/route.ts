@@ -1,13 +1,13 @@
 // import { Configuration, OpenAIApi } from 'openai-edge'
 import { Message, OpenAIStream, StreamingTextResponse } from 'ai'
 import { NextResponse } from 'next/server';
-import { db, deductCredits, deleteChatById, getChatById, getChatsByUserId, hasEnoughCredits, updateChatById } from '@/lib/db';
+import { db, deductCredits, deleteChatById, deleteSingleChat, deleteUserChats, getChatById, getChatsByUserId, hasEnoughCredits, updateChatById } from '@/lib/db';
 import { getContext } from '@/lib/context';
 import { openai } from '@/lib/openai';
 import { messages as msgs } from '@/lib/db/schema';
 import { getFileHeadFromS3 } from '@/lib/s3';
 import { calculateMessageCost } from '../../../lib/utils';
-import { getCurrentUser, protectRoute } from '../../../lib/auth/utils';
+import { protectRoute } from '../../../lib/auth/utils';
 
 // export const runtime = 'edge';
 // export const dynamic = "force-dynamic"
@@ -30,6 +30,11 @@ export const POST = protectRoute(async (req: Request, user) => {
     const userId = user?.id!;
     try {
         const { messages, chatId } = await req.json();
+
+        const chat = await getChatById(chatId);
+        if (!chat) return NextResponse.json('chat not found', { status: 404 });
+
+
         // Estimate token usage (can be refined based on your needs)
         const estimatedTokens = messages.reduce((acc: number, msg: { content: string | any[]; }) =>
             acc + msg.content.length / 4, 0);
@@ -39,9 +44,6 @@ export const POST = protectRoute(async (req: Request, user) => {
         if (!(await hasEnoughCredits(userId, estimatedCost))) {
             return NextResponse.json(`Insufficient credits. Additional ${estimatedCost} units is required.`, { status: 402 });
         }
-
-        const chat = await getChatById(chatId);
-        if (!chat) return NextResponse.json({ 'error': 'chat not found' }, { status: 404 });
 
         const fileKey = chat.fileKey;
         const lastMessage: Message = messages[messages.length - 1];
@@ -150,25 +152,54 @@ export const GET = protectRoute(async (req: Request, user) => {
     return NextResponse.json(chats);
 })
 
-export const DELETE = protectRoute(async (request: Request) => {
+export const DELETE = protectRoute(async (request: Request, user) => {
     try {
-        const { chatId } = await request.json();
-
-        if (!chatId) {
-            return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
-        }
-
-        deleteChatById(chatId);
-
-        return NextResponse.json(
-            { message: 'Chat scheduled for delete' },
-            { status: 200 }
-        )
-    } catch (err) {
-        console.error(err)
-        return NextResponse.json(
-            { error: "internal server error" },
-            { status: 500 }
-        )
+      const userId = user?.id!;
+      const { chatId } = await request.json().catch(() => ({}));
+  
+      if (chatId) {
+        // Delete single chat
+        await deleteSingleChat(chatId, userId);
+        return NextResponse.json({
+          message: 'Chat deleted successfully'
+        });
+      } else {
+        // Delete all chats
+        console.log('deleting all chats for user:', userId);
+        const deletedCount = await deleteUserChats(userId);
+        return NextResponse.json({
+          message: `${deletedCount} chats deleted successfully`
+        });
+      }
+    } catch (error) {
+      console.error('Chat deletion error:', error);
+      const message = error instanceof Error ? error.message : 'Failed to delete chat(s)';
+      return NextResponse.json(
+        { error: message },
+        { status: error instanceof Error && error.message.includes('unauthorized') ? 403 : 500 }
+      );
     }
-})
+  });
+
+// export const DELETE = protectRoute(async (request: Request) => {
+//     try {
+//         const { chatId } = await request.json();
+
+//         if (!chatId) {
+//             return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+//         }
+
+//         deleteChatById(chatId);
+
+//         return NextResponse.json(
+//             { message: 'Chat scheduled for delete' },
+//             { status: 200 }
+//         )
+//     } catch (err) {
+//         console.error(err)
+//         return NextResponse.json(
+//             { error: "internal server error" },
+//             { status: 500 }
+//         )
+//     }
+// })

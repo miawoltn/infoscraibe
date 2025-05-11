@@ -16,6 +16,13 @@ export const AUTH_ERRORS = {
     INVALID_STATE: "Invalid authentication state",
 } as const;
 
+export const LEGAL = {
+    PRIVACY_EMAIL: 'privacy@your-domain.com',
+    SUPPORT_EMAIL: 'support@your-domain.com',
+    COMPANY_NAME: 'Your Company Name',
+    COMPANY_ADDRESS: 'Your Company Address'
+  } as const;
+
 export const PRICING = {
     // OpenAI costs (in USD)
     GPT4_INPUT: 0.01, // per 1K tokens

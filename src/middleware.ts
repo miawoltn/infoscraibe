@@ -16,6 +16,12 @@ import { verifyRequestOrigin } from "lucia";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const PUBLIC_ROUTES = [
+  '/api/webhook/paystack',
+  '/api/webhook',
+  // Add other webhook routes here
+];
+
 export async function middleware(request: NextRequest) {
     // const session = await createMiddlewareClient().validateSession();
 
@@ -36,7 +42,9 @@ export async function middleware(request: NextRequest) {
     // }
 
     // return NextResponse.next();
-    if (request.method === "GET") {
+    if (request.method === "GET" ||
+      PUBLIC_ROUTES.some(route => request.nextUrl.pathname.startsWith(route))
+    ) {
       return NextResponse.next();
     }
     const originHeader = request.headers.get("Origin");

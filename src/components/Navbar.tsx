@@ -64,6 +64,7 @@ const Navbar = async () => {
                   }
                   email={user?.email?? ''}
                   imageUrl={user?.imageUrl ?? ''}
+                  emailVerified={user?.emailVerified ?? false}
                 />
                 </>
             )}

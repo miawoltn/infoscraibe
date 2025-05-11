@@ -45,6 +45,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
   } = useQuery({
     queryKey: [""],
     queryFn: async () => (await axios.get<any[]>("/api/chat")).data,
+    staleTime: Infinity
   });
 
   const { mutate: deleteChat, isPending: isDeletingChat } = useMutation({

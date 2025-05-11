@@ -4,7 +4,10 @@ import { logout } from "../lib/auth/utils/logout";
 import toast from "react-hot-toast";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
-const SignoutConfirmation = () => {
+interface SignoutConfirmationProps {
+    onCancel: (state: boolean) => void
+}
+const SignoutConfirmation = ({onCancel}: SignoutConfirmationProps) => {
     const [open, setOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -27,7 +30,7 @@ const SignoutConfirmation = () => {
 
     return (
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-center">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => onCancel(false)}>
                 Cancel
             </Button>
             <Button onClick={handleSignout}>

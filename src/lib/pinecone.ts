@@ -31,7 +31,7 @@ export const getPineconeClient = async () => {
     return pinecone;
 }
 
-export const chatPdfIndex = async () => {
+export const embeddingIndex = async () => {
     return (await getPineconeClient()).index('chatpdf');
 }
 
@@ -65,8 +65,7 @@ export async function loadS3IntoPinecone(fileKey: string, fileType: string) {
         // console.log({vectors})
 
         // upload to pinecone
-        const client = await getPineconeClient()
-        const index = client.Index('chatpdf')
+        const index = await embeddingIndex();
         const namespace = index.namespace(convertToAscii(fileKey))
         await namespace.upsert(vectors)
 
@@ -131,3 +130,25 @@ function getDocumentLoader(extension: string, blob: Blob) {
 
     throw Error('Unsupported extension');
 }
+
+export async function deleteNamespace(namespace: string) {
+    console.log(encodeURIComponent(convertToAscii(namespace)))
+    try {
+      const response = await fetch(`${process.env.INDEX_HOST}/namespaces/${encodeURIComponent(convertToAscii(namespace))}`, {
+        method: "DELETE",
+        headers: {
+          "Api-Key": process.env.PINECONE_API_KEY || "",
+          "X-Pinecone-API-Version": "2025-04"
+        }
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+      }
+  
+      const data = await response.text(); // Use .json() if you expect a JSON response
+      console.log("Namespace deleted successfully:", data);
+    } catch (error) {
+      console.error("Error deleting namespace:", error);
+    }
+  }

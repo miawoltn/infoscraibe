@@ -1,5 +1,5 @@
 import { lucia } from "@/lib/auth/lucia";
-import { db } from "@/lib/db";
+import { db, isEmailAvailable } from "@/lib/db";
 import { authUser } from "@/lib/db/schema";
 import { generateId } from "lucia";
 import { cookies } from "next/headers";
@@ -18,7 +18,16 @@ export async function POST(request: Request) {
         if (!isValid) {
             return NextResponse.json({ errors }, { status: 400 });
         }
-        
+
+        // Check email availability
+        const emailCheck = await isEmailAvailable(email);
+        if (!emailCheck.available) {
+            return NextResponse.json(
+                { error: emailCheck.message },
+                { status: 400 }
+            );
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
         const userId = generateId(15);
 

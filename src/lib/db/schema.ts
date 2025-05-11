@@ -148,3 +148,16 @@ export const emailVerification = pgTable('email_verification', {
     userIdx: index("verification_code_user_idx").on(t.userId),
   }),
 )
+
+
+export const deletedAccounts = pgTable('deleted_accounts', {
+    email: text('email').primaryKey(),
+    deletedAt: timestamp('deleted_at').notNull().defaultNow(),
+    canRegisterAfter: timestamp('can_register_after').notNull(),
+    userId: text('user_id').notNull(),
+    reason: text('reason'),
+    metadata: json('metadata')
+},
+(t) => ([
+  index("deleted_accounts_email_idx").on(t.email),
+]));

@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback } from './ui/avatar'
 import Image from 'next/image'
 import { Icons } from './Icons'
 import Link from 'next/link'
-import { AlertTriangle, CreditCard, Gem, LayoutDashboard, LogOut, LogOutIcon, Podcast, Settings, User } from 'lucide-react'
+import { AlertCircleIcon, AlertTriangle, CreditCard, Gem, Info, LayoutDashboard, LogOut, LogOutIcon, Podcast, Settings, User } from 'lucide-react'
 import { Button } from './ui/button'
 // import { SignOutButton } from '@clerk/nextjs'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
@@ -28,22 +28,32 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog'
 import SignoutConfirmation from './SignoutConfirmation'
+import { ScrollArea } from './ui/scroll-area'
+import { APP_TITLE } from '../lib/constants'
+import { cn } from '../lib/utils'
+import { Card } from './ui/card'
+import { Badge } from './ui/badge'
+import { DangerZone } from './DangerZone'
 
 
 interface UserAccountNavProps {
   email: string | undefined
   name: string
   imageUrl: string
+  emailVerified?: boolean
 }
 
 const UserAccountNav = ({
   email,
   imageUrl,
   name,
+  emailVerified
 }: UserAccountNavProps) => {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isSignoutOpen, setIsSignoutOpen] = useState(false)
 
   return (
-    <Dialog>
+    <>
       <DropdownMenu>
         <DropdownMenuTrigger
           asChild
@@ -95,77 +105,244 @@ const UserAccountNav = ({
           </DropdownMenuItem>
 
           <DropdownMenuItem asChild>
-          <Link className='cursor-pointer' href="/credit">
-            <CreditCard className="h-4 w-4 ml-1 mr-2" />
-            Credits & Usage
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-
+            <Link className='cursor-pointer' href="/credit">
+              <CreditCard className="h-4 w-4 ml-1 mr-2" />
+              Credits & Usage
+            </Link>
+          </DropdownMenuItem>
           {/* <DropdownMenuSeparator /> */}
 
-          <DialogTrigger asChild>
-            <DropdownMenuItem asChild>
-              <Link className='cursor-pointer' href={''}>
-                <Settings className='h-4 w-4 ml-1 mr-2' />
-                Settings
-              </Link>
-            </DropdownMenuItem>
-          </DialogTrigger>
-          <DropdownMenuSeparator />
 
-          <DialogTrigger asChild>
-            <DropdownMenuItem asChild>
-              <Link className='cursor-pointer' href={''}>
-                <LogOutIcon className='h-4 w-4 ml-1 mr-2' />
-                Signout
-              </Link>
-            </DropdownMenuItem>
-          </DialogTrigger>
+          {/* <DialogTrigger asChild> */}
+          <DropdownMenuItem asChild onClick={() => setIsSettingsOpen(true)}>
+            <div className='cursor-pointer' >
+              <Settings className='h-4 w-4 ml-1 mr-2' />
+              Settings
+            </div>
+          </DropdownMenuItem>
+          {/* </DialogTrigger> */}
+          {/* <DropdownMenuSeparator /> */}
+          {/* <DropdownMenuItem asChild>
+            <Link className='cursor-pointer' href='/privacy'>
+              <Podcast className='h-4 w-4 ml-1 mr-2' />
+              Privacy Policy
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link className='cursor-pointer' href='/terms'>
+              <AlertTriangle className='h-4 w-4 ml-1 mr-2' />
+              Terms of Service
+            </Link>
+          </DropdownMenuItem> */}
+          <DropdownMenuSeparator />
+          {/* <DialogTrigger asChild> */}
+          <DropdownMenuItem asChild onClick={() => setIsSignoutOpen(true)}>
+            <div className='cursor-pointer' >
+              <LogOutIcon className='h-4 w-4 ml-1 mr-2' />
+              Signout
+            </div>
+          </DropdownMenuItem>
+          {/* </DialogTrigger> */}
 
           {/* <DropdownMenuItem>
             <SignoutConfirmation />
           </DropdownMenuItem>*/}
-        </DropdownMenuContent> 
+        </DropdownMenuContent>
       </DropdownMenu>
 
-       {/* S E T T I N G S  D I A L O G */}
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
-        </DialogHeader>
-        <Separator className="my-4" />
-        <div className='flex flex-row items-center justify-between w-full'>
-          <Label>Theme</Label>
-          <ThemeSwitcher />
-        </div>
-        {/* <Tabs defaultValue="general" orientation='vertical' className='flex-col gap-6 items-start'>
-          <TabsList className='flex flex-col flex-shrink gap-2'>
-            <TabsTrigger className='border-0' value="general">
-              <Settings className="w-4 h-4 ml-2" /> {' '} General
-            </TabsTrigger>
-            <TabsTrigger className='border-0' value="account">
-              <User className="w-4 h-4 ml-2"/>  Account
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="general">
-          <ThemeSwitcher />
-          </TabsContent>
-          <TabsContent value="account">
-            Account settings goes here
-          </TabsContent>
-        </Tabs> */}
-      </DialogContent>
-      
-       {/* S I G N O U T  D I A L O G */}
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Sign out?</DialogTitle>
-        </DialogHeader>
-        <DialogDescription>You will be redirected to the home page.</DialogDescription>
-         <SignoutConfirmation />
-      </DialogContent>
-    </Dialog>
+      {/* TODO: finish work on the settings dialog */}
+      {/* S E T T I N G S  D I A L O G */}
+
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent aria-describedby={undefined} className="w-full max-w-3xl max-h-[70vh] overflow-hidden">
+          <DialogTitle className='hidden'></DialogTitle>
+          <Tabs defaultValue="general" className="flex flex-col md:flex-row h-full">
+
+            {/* Sidebar for Desktop */}
+            <div className="hidden md:flex w-[25%] border-r border-border pr-2 flex-shrink-0">
+              <div className="w-full">
+                <div className="px-2 py-4">
+                  <h2 className="text-lg font-semibold mb-2">Settings</h2>
+                  <p className="text-sm text-muted-foreground">Manage your account preferences</p>
+                </div>
+                <TabsList className="flex flex-col gap-1 bg-transparent p-0 mt-10">
+                  <TabsTrigger value="general" className="w-full justify-start px-2 py-2 h-9 font-normal focus:bg-accent hover:bg-accent">
+                    <Settings className="w-4 h-4 mr-2" />
+                    General
+                  </TabsTrigger>
+                  <TabsTrigger value="profile" className="w-full justify-start px-2 py-2 h-9 font-normal hover:bg-accent">
+                    <User className="w-4 h-4 mr-2" />
+                    Profile
+                  </TabsTrigger>
+                  <TabsTrigger value="about" className="w-full justify-start px-2 py-2 h-9 font-normal hover:bg-accent">
+                    <AlertCircleIcon className="w-4 h-4 mr-2" />
+                    About
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+            </div>
+
+            {/* Mobile Tabs Header */}
+            <div className="md:hidden flex-shrink-0 flex-wrap md:ms-[-8px] md:min-w-[180px] mt-5 px-0 pt-0 sticky top-0 bg-background z-10 border-b border-border">
+              <TabsList className="flex w-full justify-between">
+                <TabsTrigger value="general" className="flex-1">
+                  <Settings className="w-4 h-4 mx-auto" />
+                  <span className="text-xs block mt-1">General</span>
+                </TabsTrigger>
+                <TabsTrigger value="profile" className="flex-1">
+                  <User className="w-4 h-4 mx-auto" />
+                  <span className="text-xs block mt-1">Profile</span>
+                </TabsTrigger>
+                <TabsTrigger value="about" className="flex-1">
+                  <Info className="w-4 h-4 mx-auto" />
+                  <span className="text-xs block mt-1">About</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 overflow-hidden">
+              <ScrollArea className="h-[calc(70vh-4rem)] px-4 md:px-6 py-6 no-scrollbar">
+                <TabsContent value="general">
+                  <h3 className="text-base font-medium mb-4">General Settings</h3>
+                  <div className="space-y-6">
+                    <Card className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="text-base">Theme</Label>
+                          <p className="text-sm text-muted-foreground">Choose your preferred theme</p>
+                        </div>
+                        <ThemeSwitcher />
+                      </div>
+                    </Card>
+
+                    <Card className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="text-base">Language</Label>
+                          <p className="text-sm text-muted-foreground">Select your language</p>
+                        </div>
+                        <Select defaultValue="en">
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select language" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="en">English</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </Card>
+
+                    <Card className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="text-base">AI Model</Label>
+                          <p className="text-sm text-muted-foreground">Choose the AI model for responses</p>
+                        </div>
+                        <Select defaultValue="gpt-3.5">
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select model" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="gpt-3.5">GPT-3.5</SelectItem>
+                            <SelectItem value="gpt-4">GPT-4</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </Card>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="profile">
+                  <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
+                  <div className="space-y-6">
+                    <Card className="p-4">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-base">Name</Label>
+                            <p className="text-sm text-muted-foreground">{name}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-base">Email</Label>
+                            <p className="text-sm text-muted-foreground">{email}</p>
+                          </div>
+                          <Badge variant={emailVerified ? "success" : "warning"}>
+                            {emailVerified ? "Verified" : "Not Verified"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </Card>
+
+
+                    <DangerZone shouldCloseParentDialog={(value: boolean) => setIsSettingsOpen(!value)} />
+                    {/* <Card className="p-4 border-destructive">
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="text-base font-medium text-destructive mb-2">Danger Zone</h4>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Permanent actions that cannot be undone
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Button variant="destructive" className="w-full" onClick={() => toast.success("All chats deleted successfully")}>
+                            Delete All Chats
+                          </Button>
+                          <Button variant="destructive" className="w-full" onClick={() => toast.success("Account deleted successfully")}>
+                            Delete Account
+                          </Button>
+                        </div>
+                      </div>
+                    </Card> */}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="about">
+                  <h3 className="text-lg font-semibold mb-4">About {APP_TITLE}</h3>
+                  <div className="space-y-6">
+                    <Card className="p-4">
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="text-base">Version</Label>
+                          <p className="text-sm text-muted-foreground">1.0.0</p>
+                        </div>
+                        <div>
+                          <Label className="text-base">Legal</Label>
+                          <div className="space-y-2 mt-2">
+                            <Button variant="link" asChild className="h-auto p-0">
+                              <Link href="/privacy">Privacy Policy</Link>
+                            </Button>
+                            <Button variant="link" asChild className="h-auto p-0">
+                              <Link href="/terms">Terms of Service</Link>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                </TabsContent>
+              </ScrollArea>
+            </div>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
+
+      {/* S I G N O U T  D I A L O G */}
+      <Dialog open={isSignoutOpen} onOpenChange={setIsSignoutOpen}>
+        <DialogContent className="sm:max-w-[425px]"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Sign out?</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>You will be redirected to the home page.</DialogDescription>
+          <SignoutConfirmation onCancel={setIsSignoutOpen} />
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 

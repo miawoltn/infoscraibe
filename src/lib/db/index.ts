@@ -1,11 +1,12 @@
 import { NeonQueryFunction, neon } from "@neondatabase/serverless"
 // import { drizzle } from "drizzle-orm/neon-http"
 import { drizzle } from "drizzle-orm/postgres-js"
-import { authSession, authUser, chats, creditTransactions, messages, sharedChats, userCredits, userSubscriptions } from "./schema"
+import { authSession, authUser, chats, creditTransactions, deletedAccounts, messages, sharedChats, userCredits, userSubscriptions } from "./schema"
 import * as schema from "./schema";
 import { and, eq, isNull, or, sql } from "drizzle-orm"
 import postgres from 'postgres';
-
+import { deleteFileFromS3 } from "../s3";
+import { deleteNamespace } from "../pinecone";
 
 
 if (!process.env.DATABASE_URL) {
@@ -14,7 +15,7 @@ if (!process.env.DATABASE_URL) {
 
 // const a: NeonQueryFunction<boolean, boolean> = neon(process.env.DATABASE_URL)
 
-export const pg = postgres(process.env.DATABASE_URL, { max: 2 })
+export const pg = postgres(process.env.DATABASE_URL, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
 
 export const db = drizzle(pg, { schema })
@@ -24,7 +25,7 @@ export const db = drizzle(pg, { schema })
 export type UserSubscription = typeof userSubscriptions.$inferSelect | typeof userSubscriptions.$inferInsert
 export type Chats = typeof chats.$inferSelect | typeof chats.$inferInsert
 export type Messages = typeof messages.$inferSelect | typeof messages.$inferInsert
-export type AuthUser = typeof authUser.$inferSelect |typeof authUser.$inferInsert;
+export type AuthUser = typeof authUser.$inferSelect | typeof authUser.$inferInsert;
 export type AuthSession = typeof authSession.$inferSelect | typeof authSession.$inferInsert
 
 export const insertChat = async (chat: Chats) => await db.insert(chats).values(chat);
@@ -253,24 +254,137 @@ export const hasEnoughCredits = async (userId: string, requiredAmount: number) =
     return currentCredits >= requiredAmount;
 };
 
-export const getUserByEmail = async(email :string) => await db.query.authUser.findFirst({
+export const getUserByEmail = async (email: string) => await db.query.authUser.findFirst({
     where: eq(authUser.email, email)
 });
 
-export const getUserById = async(id :string) => await db.query.authUser.findFirst({
+export const getUserById = async (id: string) => await db.query.authUser.findFirst({
     where: eq(authUser.id, id)
 });
 
-export const getUserByGoogleIdOrEmail = async(googleId: string, email: string) => await db.query.authUser.findFirst({
-    where:  (table, { eq, or }) => or(eq(table.googleId, googleId), eq(table.email, email)),
+export const getUserByGoogleIdOrEmail = async (googleId: string, email: string) => await db.query.authUser.findFirst({
+    where: (table, { eq, or }) => or(eq(table.googleId, googleId), eq(table.email, email)),
 });
 
-export const createUser = async (user: AuthUser) =>  await db.insert(authUser).values(user).returning();
+export const createUser = async (user: AuthUser) => await db.insert(authUser).values(user).returning();
 
 export const updateUser = async (id: string, user: {}) => {
-    console.log({user})
+    console.log({ user })
     await db
-.update(authUser)
-.set(user)
-.where(eq(authUser.id, id))
+        .update(authUser)
+        .set(user)
+        .where(eq(authUser.id, id))
 };
+
+export async function deleteUserChats(userId: string) {
+    return await db.transaction(async (tx) => {
+        // 1. Get all user's chats to delete their files
+        const userChats = await tx.query.chats.findMany({
+            where: eq(chats.userId, userId),
+            columns: {
+                id: true,
+                fileKey: true,
+            },
+        });
+
+        // 2. Delete files from S3 and vectors from Pinecone
+        await Promise.allSettled([
+            ...userChats.map(chat => deleteFileFromS3(chat.fileKey)),
+            ...userChats.map(chat => deleteNamespace(chat.fileKey))
+        ]);
+
+        // 3. Delete messages first (maintain referential integrity)
+        for (const chat of userChats) {
+            await tx.delete(messages).where(eq(messages.chatId, chat.id));
+        }
+
+        // 4. Delete all chats
+        await tx.delete(chats).where(eq(chats.userId, userId));
+
+        return userChats.length;
+    });
+}
+
+export async function deleteSingleChat(chatId: number, userId: string) {
+    return await db.transaction(async (tx) => {
+        // 1. Get chat details and verify ownership
+        const chat = await tx.query.chats.findFirst({
+            where: and(
+                eq(chats.id, chatId),
+                eq(chats.userId, userId)
+            ),
+            columns: {
+                fileKey: true,
+            },
+        });
+
+        if (!chat) {
+            throw new Error('Chat not found or unauthorized');
+        }
+
+        // 2. Delete file from S3 and vectors from Pinecone
+        await Promise.allSettled([
+            deleteFileFromS3(chat.fileKey),
+            deleteNamespace(chat.fileKey)
+        ]);
+
+        // 3. Delete messages
+        await tx.delete(messages).where(eq(messages.chatId, chatId));
+
+        // 4. Delete chat
+        await tx.delete(chats).where(eq(chats.id, chatId));
+
+        return true;
+    });
+}
+
+export async function isEmailAvailable(email: string): Promise<{
+    available: boolean;
+    cooldownRemaining?: number;
+    message?: string;
+}> {
+    // Check if email exists in active users
+    const existingUser = await db.query.authUser.findFirst({
+        where: eq(authUser.email, email)
+    });
+
+    if (existingUser) {
+        return {
+            available: false,
+            message: 'Email already registered'
+        };
+    }
+
+    // Check if email is in cooling period
+    const deletedAccount = await db.query.deletedAccounts.findFirst({
+        where: eq(deletedAccounts.email, email)
+    });
+
+    if (deletedAccount) {
+        const now = new Date();
+        const canRegisterAfter = new Date(deletedAccount.canRegisterAfter);
+
+        if (now < canRegisterAfter) {
+            // Log failed attempts during cooldown
+            console.warn(`Attempted registration of deleted email ${email} during cooldown`);
+            const cooldownRemaining = Math.ceil(
+                (canRegisterAfter.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+            );
+
+            return {
+                available: false,
+                cooldownRemaining,
+                message: `This email cannot be registered for ${cooldownRemaining} more days`
+            };
+        }
+
+        // Log successful cooldown completion
+        console.info(`Cooldown completed for ${email}, removing from deletedAccounts`);
+
+        // If cooling period is over, delete the record
+        await db.delete(deletedAccounts)
+            .where(eq(deletedAccounts.email, email));
+    }
+
+    return { available: true };
+}

@@ -3,7 +3,7 @@ import { decodeIdToken } from "arctic";
 
 import type { OAuth2Tokens } from "arctic";
 import { google } from "../../../../../lib/auth/lucia";
-import { createUser, getUserByGoogleIdOrEmail, initializeUserCredits, updateUser } from "../../../../../lib/db";
+import { createUser, getUserByGoogleIdOrEmail, initializeUserCredits, isEmailAvailable, updateUser } from "../../../../../lib/db";
 import { SessionManager } from "../../../../../lib/auth/utils";
 import { generateId } from "lucia";
 import { EmailTemplate, sendEmail } from "../../../../../lib/email";
@@ -53,6 +53,14 @@ export async function GET(request: Request): Promise<Response> {
 
 		if (!user) {
 			console.log('creating new user...')
+
+			 // Check email availability
+			 const emailCheck = await isEmailAvailable(email);
+			 console.log({emailCheck})
+			 if (!emailCheck.available) {
+				return redirectToError(emailCheck.message || "Unable to create account");
+			 }
+
 			const userId = generateId(15);
 			user = (await createUser({ id: userId, email, name, imageUrl: picture, googleId, emailVerified: true }))[0];
 			// Initialize user credits

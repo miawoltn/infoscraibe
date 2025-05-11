@@ -330,7 +330,7 @@ body.scroll-lock {
 /* Prevent page overflow */
 html, body {
   height: 100%;
-  overflow: auto; /* Change from hidden to auto */
+  overflow: hidden; /* Change from hidden to auto */
 }
 
 /* Custom scrollbar styles */

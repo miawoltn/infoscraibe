@@ -32,7 +32,7 @@ export const getPineconeClient = async () => {
 }
 
 export const embeddingIndex = async () => {
-    return (await getPineconeClient()).index('chatpdf');
+    return (await getPineconeClient()).index(process.env.INDEX_NAME || '');
 }
 
 export async function loadS3IntoPinecone(fileKey: string, fileType: string) {

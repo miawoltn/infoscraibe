@@ -9,6 +9,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { validateRequest } from "../lib/auth/utils/validate-request";
+import { ScrollArea } from "../components/ui/scroll-area";
 
 export default async function Home() {
   const { session } = await validateRequest();
@@ -19,7 +20,8 @@ export default async function Home() {
   }
   return (
      <Suspense>
-      <MaxWidthWrapper className='mb-12 mt-10 sm:md:mt-40 flex flex-col items-center justify-center text-center'>
+      <ScrollArea className="h-[calc(100vh-2rem)]">
+      <MaxWidthWrapper className='mb-12 mt-10 sm:md:mt-40 flex flex-col items-center justify-center text-center overflow-auto'>
         <h1 className='max-w-4xl text-xl font-bold md:text-4xl lg:text-6xl'>
           <Typewriter text="Access information from your documents in seconds." />
         </h1>
@@ -160,6 +162,7 @@ export default async function Home() {
           </div>
         </div>
       </div>
+      </ScrollArea>
       </Suspense>
   );
 }

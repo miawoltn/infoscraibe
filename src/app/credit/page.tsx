@@ -4,6 +4,7 @@ import { CreditsDashboard } from '@/components/CreditsDashboard'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { Loader2 } from 'lucide-react'
+import { ScrollArea } from '../../components/ui/scroll-area'
 
 function CreditsPage() {
   const { data, isLoading } = useQuery({
@@ -23,6 +24,7 @@ function CreditsPage() {
   }
 
   return (
+    <ScrollArea className="h-[calc(100vh-2rem)] scroll-m-0">
     <div className="h-screen flex flex-col">
       <div className="flex-1">
         <div className="container mx-auto p-8">
@@ -35,6 +37,7 @@ function CreditsPage() {
         </div>
       </div>
     </div>
+    </ScrollArea>
   )
 }
 

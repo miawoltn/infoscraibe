@@ -1,15 +1,15 @@
 import { getEmbeddings } from './embeddings';
-import { chatPdfIndex } from './pinecone'
+import { embeddingIndex } from './pinecone';
 import { convertToAscii } from './utils';
 
 export async function getMatchesFromEmbedding(embeddings: number[], fileKey: string) {
-   const index = await chatPdfIndex();
+   const index = await embeddingIndex();
    try {
     const namespace = index.namespace(convertToAscii(fileKey));
     const result = await namespace.query({
         topK: 5,
         vector: embeddings,
-        includeMetadata: true
+        includeMetadata: true,
     });
 
     return result.matches || [];

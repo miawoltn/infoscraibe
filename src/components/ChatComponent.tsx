@@ -1,108 +1,318 @@
-'use client'
-import Link from 'next/link'
-import React, { useEffect, useRef, useState } from 'react'
-import { Button } from './ui/button'
-import { PlusCircle, Send, Loader2, ArrowUp, Dot } from 'lucide-react'
-import { Input } from './ui/input'
-import { useChat } from 'ai/react'
-import MessageList from './MessageList'
-import { useQuery } from '@tanstack/react-query'
-import axios from 'axios'
-import { Message } from 'ai'
-import MessageInput from './MessageInput'
-import { Textarea } from './ui/textarea'
-import { cn } from '@/lib/utils'
-import toast from 'react-hot-toast'
+"use client";
+import React, { useEffect, useState } from "react";
+import { useChat } from "ai/react";
+import MessageList from "./MessageList";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import MessageInput from "./MessageInput";
+import { Message } from "@/lib/utils";
+import toast from "react-hot-toast";
 
 type Props = {
-  chatId: number
+  chatId: number;
 };
 
 const ChatComponent = ({ chatId }: Props) => {
-  const [mode, setMode] = useState<'multi' | 'single'>('single');
+  const [mode, setMode] = useState<"multi" | "single">("single");
   const [textareaRows, setTextareaRows] = useState(1);
-
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['chat', chatId],
+    queryKey: ["chat", chatId],
     queryFn: async () => {
-      const response = await axios.post<Message[]>('/api/get-messages', { chatId });
+      const response = await axios.post<Message[]>("/api/get-messages", {
+        chatId,
+      });
       return response.data;
-    }
-  })
-  
-  const { input, handleInputChange, handleSubmit, messages, isLoading: isAithinking, setInput } = useChat({
-    api: '/api/chat',
-    body: { chatId },
-    initialMessages: data || [],
-    onError: (error) => {
-      toast.error('Unable to process chat.')
-      setInput(input)
-    }
+    },
   });
 
-  const sendMessage = (message: string) => {
-  }
+  const {
+    input,
+    handleInputChange,
+    handleSubmit,
+    messages,
+    isLoading: isAithinking,
+    setInput,
+    setMessages,
+  } = useChat({
+    api: "/api/chat",
+    body: { chatId },
+    initialMessages: (data || []) as Message[],
+    onError: (error) => {
+      toast.error(error?.message || "Unable to process chat.");
+      setInput(input);
+    },
+  }) as {
+    input: string;
+    handleInputChange: (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => void;
+    handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+    messages: Message[];
+    isLoading: boolean;
+    setInput: (input: string) => void;
+    setMessages: (messages: Message[]) => void;
+  };
 
-  useEffect(() => {
-    const messageContainer = document.getElementById('message-container');
-    if (messageContainer) {
-      messageContainer.scrollTo({
-        top: messageContainer.scrollHeight,
-        behavior: 'smooth'
+  const handleRegenerate = async (messageId: string) => {
+    try {
+      setRegeneratingId(messageId);
+      const messageToRegenerate = messages.find((m) => m.id === messageId);
+      if (!messageToRegenerate) return;
+
+      // Store the current content before any changes
+      const currentContent = messageToRegenerate.content;
+      const currentVersions = messageToRegenerate.previousVersions || [];
+
+      // Clear the content immediately when regeneration starts
+      setMessages(
+        messages.map((m) =>
+          m.id === messageId
+            ? {
+                ...m,
+                content: "", // Clear content to show loader
+                previousVersions: [...(m.previousVersions || []), m.content],
+              }
+            : m
+        )
+      );
+
+      // Find the last user message before this AI response
+      const messageIndex = messages.findIndex((m) => m.id === messageId);
+      const previousUserMessage = messages
+        .slice(0, messageIndex)
+        .reverse()
+        .find((m) => m.role === "user");
+
+      if (!previousUserMessage) {
+        toast.error("Could not find corresponding user message");
+        return;
+      }
+
+      setShouldScrollToBottom(false); // Prevent auto-scroll
+
+      // Scroll to the message being regenerated
+      const messageElement = document.getElementById(`message-${messageId}`);
+      if (messageElement) {
+        messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      const response = await fetch("/api/chat/regenerate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: messages.slice(0, messageIndex + 1),
+          chatId,
+          messageId,
+          previousUserMessageId: previousUserMessage.id,
+        }),
       });
-    }
 
-  }, [messages])
+      if (!response.ok) {
+        const error = await response.json();
+        if (error.regenerationCount >= 3) {
+          toast.error("Please delete a previous version to continue");
+        } else {
+          toast.error("Failed to regenerate response");
+        }
+        // Restore the original content and versions
+        setMessages(
+          messages.map((m) =>
+            m.id === messageId
+              ? {
+                  ...m,
+                  content: currentContent,
+                  previousVersions: currentVersions,
+                }
+              : m
+          )
+        );
+        return;
+      }
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let content = "";
+      let hasReceivedContent = false;
+
+      while (reader) {
+        try {
+          const { value, done } = await reader.read();
+          if (done) {
+            const messageResponse = await fetch(
+              `/api/get-messages/${messageId}`
+            );
+            if (messageResponse.ok) {
+              const { message } = await messageResponse.json();
+              setMessages(
+                messages.map((m) =>
+                  m.id === messageId
+                    ? {
+                        ...message,
+                      }
+                    : m
+                )
+              );
+            }
+            break;
+          }
+
+          content += decoder.decode(value);
+          hasReceivedContent = true;
+          console.log({ content });
+
+          // Update message in real-time
+          if (content.trim()) {
+            setMessages(
+              messages.map((m) =>
+                m.id === messageId
+                  ? {
+                      ...m,
+                      content,
+                      previousVersions: [...currentVersions, currentContent],
+                    }
+                  : m
+              )
+            );
+          }
+        } catch (streamError) {
+          console.error("Stream error:", streamError);
+          // Restore original state on stream error
+          setMessages(
+            messages.map((m) =>
+              m.id === messageId
+                ? {
+                    ...m,
+                    content: currentContent,
+                    previousVersions: currentVersions,
+                  }
+                : m
+            )
+          );
+          throw streamError;
+        }
+      }
+    } catch (error) {
+      toast.error("Failed to regenerate response");
+      console.error("Regeneration failed:", error);
+    } finally {
+      setRegeneratingId(null);
+    }
+  };
+
+  const handleDeleteVersion = async (
+    messageId: string,
+    versionIndex: number
+  ) => {
+    try {
+      await axios.post("/api/chat/delete-version", {
+        messageId,
+        versionIndex,
+      });
+
+      // Refresh messages after deletion
+      const response = await axios.post<Message[]>("/api/get-messages", {
+        chatId,
+      });
+      setMessages(response.data);
+    } catch (error) {
+      toast.error("Failed to delete version");
+    }
+  };
+
+  const handleFeedback = async (
+    messageId: string,
+    feedback: "like" | "dislike" | null,
+    reason?: string
+  ) => {
+    try {
+      const response = await axios.post("/api/chat/feedback", {
+        messageId,
+        feedback,
+        reason,
+      });
+
+      // Update message in state
+      setMessages(
+        messages.map((m) =>
+          m.id === messageId ? { ...m, feedback, feedbackReason: reason } : m
+        )
+      );
+
+      if (feedback === "like" || feedback === "dislike") {
+        toast.success(
+          feedback === "like"
+            ? "Thanks for the feedback!"
+            : "Thank you for helping us improve"
+        );
+      }
+    } catch (error) {
+      toast.error("Failed to save feedback");
+    }
+  };
 
   useEffect(() => {
-    if (textareaRows >= 2 && input && mode === 'single') {
-      setMode('multi');
-    } else if (!input && mode === 'multi') {
-      setMode('single');
+    if (shouldScrollToBottom && !regeneratingId) {
+      const messageContainer = document.getElementById("message-container");
+      if (messageContainer) {
+        messageContainer.scrollTo({
+          top: messageContainer.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [messages, shouldScrollToBottom, regeneratingId]);
+
+  useEffect(() => {
+    if (textareaRows >= 2 && input && mode === "single") {
+      setMode("multi");
+    } else if (!input && mode === "multi") {
+      setMode("single");
     }
   }, [textareaRows, mode, input]);
 
-  const isButtonDisabled = isLoading || isAithinking || !!!input
+  const isButtonDisabled =
+    (isLoading && !data) || isAithinking || !input.trim();
+
+  // Reset scroll behavior when sending new messages
+  const handleMessageSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    setShouldScrollToBottom(true);
+    handleSubmit(e);
+  };
 
   return (
-    <div className='flex flex-col h-dvh bg-white dark:bg-background shadow shadow-black-400'>
-
-      <div className='overflow-auto p-4 mb-10 pb-10' id='message-container'>
-        <MessageList messages={messages} isLoading={isLoading} />
+    <div className="flex flex-col h-full bg-white dark:bg-background relative">
+      {/* Message container with proper padding and scroll containment */}
+      <div
+        id="message-container"
+        className="flex-1 overflow-y-auto pb-32 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700"
+      >
+        <MessageList
+          messages={messages}
+          isLoading={isLoading}
+          onRegenerate={handleRegenerate}
+          regeneratingId={regeneratingId}
+          onDeleteVersion={handleDeleteVersion}
+          onFeedback={handleFeedback}
+        />
       </div>
 
-      {/* <div className='fixed bottom-0 overflow-auto bg-background pb-10 w-full'> */}
-      <MessageInput isAiThinking={isAithinking} loading={isButtonDisabled} message={input} handleSubmit={handleSubmit} handleInputChange={handleInputChange} />
-      {/* </div> */}
-      {/* <form onSubmit={handleSubmit} className='fixed bottom-0 right-0 md:w-2/3 w-full p-1 bg-white dark:bg-transparent shadow-black-400 px-10'>
-        <p className={cn('animate-bounce items-center ml-7', {
-          "hidden": isAithinking === false,
-        })}> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ellipsis"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></p>
-        <div className="flex flex-row items-center">
-          <Textarea
-            // ref={textareaRef}
-            disabled={isLoading}
-            rows={1}
-            value={input}
-            autoFocus={false}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && "form" in e.target) {
-                e.preventDefault();
-                (e.target.form as HTMLFormElement).requestSubmit();
-              }
-            }}
-            placeholder='Ask any question...'
-            className='min-h-[0] resize-none pr-12 text-base py-2 focus:ring-1 focus-visible:ring-1'
-          />
-          <Button disabled={isButtonDisabled} className='bg-blue-800 ml-2 rounded' variant='default'>
-            <ArrowUp className='h-4 w-4' />
-          </Button>
-        </div>
-      </form> */}
+      {/* Gradient overlay to fade content under input */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white dark:from-background to-transparent pointer-events-none" />
+
+      {/* Input container with fixed positioning */}
+      <div className="absolute bottom-0 left-0 right-0">
+        <MessageInput
+          isAiThinking={isAithinking}
+          loading={isAithinking}
+          message={input}
+          handleSubmit={handleMessageSubmit}
+          handleInputChange={handleInputChange}
+        />
+      </div>
     </div>
-  )
+  );
 };
 
 export default ChatComponent;

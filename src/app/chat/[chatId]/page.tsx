@@ -1,18 +1,17 @@
 
 'use client'
 import ChatComponent from '@/components/ChatComponent';
-import ChatSideBar from '@/components/ChatSideBar';
 import PDFViewer from '@/components/PDFViewer';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { db, getChatByUserIdAndChatId, getChatByUserIdAndChecksum } from '@/lib/db';
-import { chats } from '@/lib/db/schema';
-import { checkSubscription } from '@/lib/subscription';
-import { auth, currentUser, useUser } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { ArrowLeft, FileText } from 'lucide-react';
 import { redirect } from 'next/navigation';
-import React from 'react'
+import React, { useState } from 'react'
+import { cn } from '../../../lib/utils';
+import Link from 'next/link';
+import { useAuth } from '../../../lib/auth/utils/context';
 
 type Props = {
     params: {
@@ -20,28 +19,31 @@ type Props = {
     }
 }
 
-const ChatPage =  ({ params: { chatId } }: Props) => {
+const ChatPage = ({ params: { chatId } }: Props) => {
+    const { user, isSignedIn, isLoading: isUserLoading } = useAuth();
+
     const [id, checksum] = decodeURIComponent(chatId).split(':')
-    const { data, isLoading, isError } = useQuery({
+    const [showPDF, setShowPDF] = useState(false);
+    const { data, isLoading, isError, error } = useQuery({
         queryKey: ['checksum', checksum],
         queryFn: async () => {
           const response = await axios.get(`/api/chat/${checksum}`);
           console.log(response.data)
           return response.data;
         },
-        // staleTime: Infinity
+        staleTime: Infinity
     })
 
-    const { isSignedIn, isLoaded } = useUser();
+    
     // if(!isLoaded) {
     //     return <Skeleton className='m-5 h-60 w-full' />
     // }
 
-    if(!isSignedIn) {
+    if(!isSignedIn && !isUserLoading) {
         return redirect('/sign-in'); 
     }
 
-    if(isLoading || !isLoaded) {
+    if(isLoading || isUserLoading) {
         return (
             <div className='flex flex-col md:flex-row'>
                 {/* PDF Viewer Skeleton */}
@@ -82,7 +84,7 @@ const ChatPage =  ({ params: { chatId } }: Props) => {
                         />
                     </svg>
                     <h1 className="text-2xl font-semibold text-foreground">Unable to load chat</h1>
-                    <p className="text-muted-foreground">There was an error loading the chat. Please try again.</p>
+                    <p className="text-muted-foreground">{error?.message || 'There was an error loading the chat. Please try again.'}</p>
                 </div>
                 <div className="flex gap-3">
                     <Button 
@@ -104,20 +106,61 @@ const ChatPage =  ({ params: { chatId } }: Props) => {
     }
 
     return (
-        <div className='flex flex-col md:flex-row '>
-            {/* Left sidebar & main wrapper */}
-            <div className='w-full md:w-1/3 lg:md:h-screen h-2/3'>
-                <div className='px-0 pt-5 sm:px-6 lg:pl-8 xl:flex-1 xl:pl-6'>
-                    {/* Main area */}
-                    <PDFViewer url={data.fileUrl} />
-                </div>
-            </div>
-
-            <div className='w-full md:w-2/3 border-l border-gray-200 dark:border-gray-600'>
-                <ChatComponent chatId={Number(id)} />
+        <div className='flex flex-col h-[calc(100vh-3.5rem)]'>
+        {/* Header with back button */}
+        <div className="h-12 sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-700 bg-white/75 dark:bg-gray-900/75 backdrop-blur-sm">
+            <div className="flex items-center h-12 px-4">
+                <Link 
+                    href="/dashboard"
+                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Back to Documents</span>
+                </Link>
             </div>
         </div>
-    );
+        <div className='flex flex-col md:flex-row flex-1 h-[calc(100vh-3.5rem-3rem)]'>
+        {/* PDF Toggle Button - Only visible on mobile */}
+        <Button
+            onClick={() => setShowPDF(!showPDF)}
+            className="md:hidden fixed left-2 top-1/2 -translate-y-1/2 z-50 
+                bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full 
+                shadow-lg transition-all duration-300 hover:scale-110"
+            aria-label="Toggle PDF Viewer"
+        >
+            <FileText className="h-6 w-6" />
+        </Button>
+
+        {/* PDF Viewer - Hidden by default on mobile */}
+        <div className={cn(
+            'w-full md:w-1/3 h-[calc(100vh-3.5rem-3rem)] absolute md:relative',
+            'transition-transform duration-300 ease-in-out',
+            'bg-white dark:bg-gray-900 z-40 md:z-0',
+            showPDF ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        )}>
+            <div className='h-[calc(100vh-3.5rem-3rem)] px-0 pt-5 sm:px-6 lg:pl-8 xl:pl-6'>
+                <PDFViewer url={data.fileUrl} 
+                showPDF={showPDF}
+                onClose={() => setShowPDF(false)}/>
+            </div>
+        </div>
+
+        {/* Overlay to close PDF viewer when clicking outside */}
+        {showPDF && (
+            <div 
+                className="fixed inset-0 bg-black/40 z-30 md:hidden"
+                onClick={() => setShowPDF(false)}
+                aria-label="Close document overlay"
+            />
+        )}
+
+        {/* Chat Component - Main view */}
+        <div className='w-full md:w-2/3 h-[calc(100vh-3.5rem-3rem)] border-l border-gray-200 dark:border-gray-600 relative'>
+            <ChatComponent chatId={Number(id)} />
+        </div>
+    </div>
+    </div>
+);
 };
 
 export default ChatPage;

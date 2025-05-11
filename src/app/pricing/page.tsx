@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/tooltip'
 import { PLANS } from '@/config/pricing'
 import { cn } from '@/lib/utils'
-import { currentUser } from '@clerk/nextjs'
 import {
   ArrowRight,
   Check,
@@ -17,9 +16,10 @@ import {
   Minus,
 } from 'lucide-react'
 import Link from 'next/link'
+import { getCurrentUser } from '../../lib/auth/utils'
 
 const Page = async () => {
-  const user = await currentUser()
+  const user = await getCurrentUser()
 
   const pricingItems = [
     {

@@ -8,7 +8,7 @@ export const getEmbeddings = async (text: string) => {
         })
 
         const result = await response.json()
-        // console.log(result)
+        console.log(result)
         return result.data[0].embedding as number[]
     } catch (err) { 
         console.log('embedding::err',err)

@@ -12,6 +12,34 @@ const baseUrl = axios.create({
     }
 })
 
+interface InitializePaymentProps {
+  amount: number;
+  email: string;
+  metadata: {
+    userId: string;
+    credits: number;
+    type: 'topup';
+  };
+}
+
+export const initialisePayment = async ({ amount, email, metadata }: InitializePaymentProps) => {
+  try {
+    const response = await baseUrl.post('/transaction/initialize',
+      {
+        amount: amount * 100, // Convert to kobo
+        email,
+        metadata,
+        callback_url: `${process.env.NEXT_BASE_URL}/dashboard?success=true`,
+      }
+    );
+
+    return response.data.data.authorization_url;
+  } catch (error) {
+    console.error('Paystack payment initialization failed:', error);
+    throw new Error('Failed to initialize payment');
+  }
+};
+
 export const initialiseSubscription = async ({ userId, email }: { userId: string, email: string }) => {
     try {
         const { data } = await baseUrl.post(`/transaction/initialize`, {

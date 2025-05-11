@@ -128,6 +128,7 @@ export async function getFileUrl(fileKey: string) {
 export const deleteFileFromS3 = async (
     bucketKey: string,
 ) => {
+    console.log('deleting file from s3', bucketKey)
     const command = new DeleteObjectCommand({
         Bucket: bucketName,
         Key: bucketKey,

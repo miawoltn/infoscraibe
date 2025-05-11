@@ -45,6 +45,7 @@ const Dashboard = ({ subscriptionPlan }: PageProps) => {
   } = useQuery({
     queryKey: [""],
     queryFn: async () => (await axios.get<any[]>("/api/chat")).data,
+    staleTime: Infinity
   });
 
   const { mutate: deleteChat, isPending: isDeletingChat } = useMutation({
@@ -176,7 +177,7 @@ const ConfirmDialog = () => {
   }
 
   return (
-    <main className="mx-auto max-w-7xl md:p-10 w-full">
+    <main className="mx-auto max-w-7xl md:p-10 w-full flex flex-col h-[calc(100vh-3.5rem)]">
       <div className="mt-0 flex flex-col items-center justify-between gap-4 border-b border-gray-200 pb-5 sm:flex-row sm:items-center sm:gap-0">
       <h3 className="mb-3 font-bold text-5xl relative group cursor-default
         bg-gradient-to-r from-blue-600 via-blue-500 to-purple-500 bg-clip-text text-transparent
@@ -190,8 +191,9 @@ const ConfirmDialog = () => {
       </div>
 
       {/* display all user files */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-10 mb-10">
       {files && files?.length !== 0 ? (
-        <ul className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {files
             .sort(
               (a, b) =>
@@ -296,7 +298,7 @@ const ConfirmDialog = () => {
           ))}
         </div>
       ) : (
-        <div className="mt-16 flex flex-col items-center gap-4 animate-fadeIn">
+        <div className="mt-10 flex flex-col items-center gap-4 animate-fadeIn">
           <div className="relative">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 opacity-75 blur-sm animate-pulse" />
             <div className="relative rounded-full p-4 bg-white dark:bg-slate-800">
@@ -320,6 +322,7 @@ const ConfirmDialog = () => {
         </div>
       )}
       <ConfirmDialog />
+      </div>
     </main>
   );
 };

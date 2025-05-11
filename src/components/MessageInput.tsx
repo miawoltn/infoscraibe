@@ -1,12 +1,12 @@
 import { cn } from '@/lib/utils';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, Loader2, SendHorizonal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 
 const MessageInput = ({
   handleInputChange,
   handleSubmit,
-  loading,
+  loading = false,
   isAiThinking,
   message
 }: {
@@ -16,7 +16,8 @@ const MessageInput = ({
   isAiThinking: boolean,
   message: string;
 }) => {
-  // const [message, setMessage] = useState('');
+  // Calculate button disabled state internally
+  const isDisabled = loading || !message.trim();
   const [textareaRows, setTextareaRows] = useState(1);
   const [mode, setMode] = useState<'multi' | 'single'>('single');
 
@@ -29,66 +30,73 @@ const MessageInput = ({
   }, [textareaRows, mode, message]);
 
   return (
-    <>
-    <p className={cn('animate-bounce items-center ml-9 fixed bottom-0 mb-16', {
-      "hidden": isAiThinking === false,
-    })}> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ellipsis"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></p>
-    <form
-      onSubmit={(e) => {
-        if (loading) return;
-        e.preventDefault();
-        handleSubmit(e)
-        // sendMessage(message);
-        // setMessage('');
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' && !e.shiftKey && !loading) {
+    <div className="w-full bg-transparent">
+      {isAiThinking && (
+       <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 z-10">
+       <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 dark:text-gray-300 
+         bg-white/80 dark:bg-gray-800/80 rounded-full shadow-lg backdrop-blur-sm">
+         <Loader2 className="w-4 h-4 animate-spin" />
+         AI is thinking...
+       </div>
+     </div>
+      )}
+
+      <form
+        onSubmit={(e) => {
+          if (loading) return;
           e.preventDefault();
-          handleSubmit(e)
-          // sendMessage(message);
-          // setMessage('');
-        }
-      }}
-      className={cn(
-        'fixed bottom-0 right-2 ml-20 bg-background flex items-center w-[65%] overflow-auto mb-3 p-2 border border-gray',
-        // 'fixed bottom-0 right-0 md:w-2/3 ml-10 p-4 flex items-center overflow-auto border border-light-200 dark:border-dark-200',
-        // 'fixed bottom-0 right-0 md:w-2/3 w-full p-1 bg-white dark:bg-transparent shadow-black-400 px-10',
-        mode === 'multi' ? 'flex-row rounded-lg' : 'flex-row rounded-full',
-      )}
-    >
-      <TextareaAutosize
-        value={message}
-        onChange={(e) => handleInputChange(e)}
-        onHeightChange={(height, props) => {
-          setTextareaRows(Math.ceil(height / props.rowHeight));
+          handleSubmit(e);
         }}
-        className="transition bg-transparent dark:bg-dark-secondary dark:placeholder:text-white/50 placeholder:text-sm text-base dark:text-white resize-none focus:outline-none w-full px-5 max-h-24 lg:max-h-36 xl:max-h-48 flex-grow flex-shrink"
-        placeholder=" Ask a question..."
-      />
-      {mode === 'single' && (
-        <div className="flex flex-row items-center space-x-4">
-          <button
-            disabled={message.trim().length === 0 || loading}
-            className="bg-gray-400 text-white disabled:text-black/50 dark:disabled:text-white/50 hover:bg-opacity-85 transition duration-100 disabled:bg-[#e0e0dc79] dark:disabled:bg-[#ececec21] rounded-full p-2"
-          >
-            <ArrowUp className="" size={17} />
-          </button>
-        </div>
-      )}
-      {mode === 'multi' && (
-        <div className="flex flex-row items-center">
-          <div className="flex flex-row items-center space-x-4">
-            <button
-              disabled={message.trim().length === 0 || loading}
-              className="bg-gray-400 text-white text-black/50 dark:disabled:text-white/50 hover:bg-opacity-85 transition duration-100 disabled:bg-[#e0e0dc79] dark:disabled:bg-[#ececec21] rounded-full p-2 ml-10"
-            >
-              <ArrowUp className="" size={17} />
-            </button>
-          </div>
-        </div>
-      )}
-    </form>
-    </>
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey && !loading) {
+            e.preventDefault();
+            handleSubmit(e);
+          }
+        }}
+        className={cn(
+          'mx-4 mb-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-20',
+          'flex items-center shadow-lg transition-all duration-200',
+          'border border-gray-200 dark:border-gray-700',
+          mode === 'multi' ? 'rounded-2xl p-4' : 'rounded-full p-2',
+          'max-w-[calc(100%-2rem)]' // Add max-width
+        )}
+      >
+        <TextareaAutosize
+          value={message}
+          onChange={(e) => handleInputChange(e)}
+          onHeightChange={(height, props) => {
+            setTextareaRows(Math.ceil(height / props.rowHeight));
+          }}
+          className={cn(
+            "transition-all duration-200 bg-transparent",
+            "text-base text-gray-700 dark:text-gray-200",
+            "placeholder:text-gray-400 dark:placeholder:text-gray-500",
+            "resize-none focus:outline-none w-full px-4",
+            "max-h-24 lg:max-h-36 xl:max-h-48 flex-grow flex-shrink",
+          )}
+          placeholder="Ask a question..."
+        />
+
+        <button
+          disabled={message.trim().length === 0 || loading}
+          className={cn(
+            "flex items-center justify-center",
+            "w-10 h-10 rounded-full transition-all duration-200",
+            "bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-700",
+            "text-white disabled:text-gray-400 dark:disabled:text-gray-500",
+            "transform hover:scale-105 active:scale-95",
+            "disabled:hover:scale-100 disabled:cursor-not-allowed"
+          )}
+          type="submit"
+        >
+          {loading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <SendHorizonal className="w-5 h-5" />
+          )}
+        </button>
+      </form>
+    </div>
   );
 };
 

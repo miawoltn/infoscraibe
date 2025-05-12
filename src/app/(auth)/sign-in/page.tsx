@@ -39,10 +39,10 @@ export default async function SignInPage() {
     if (user) redirect("/dashboard");
 
     return (
-        <div className="flex h-screen items-center justify-center">
-            <div className="w-full max-w-md space-y-8 px-4 py-8">
+        <div className="flex mt-20 space-y-8 px-4 justify-center">
+            {/* <div className="w-full max-w-md space-y-8 px-4 py-8"> */}
                 <SignInForm />
-            </div>
+            {/* </div> */}
         </div>
     );
 }

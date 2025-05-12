@@ -31,7 +31,7 @@ interface PageProps {
   subscriptionPlan: Awaited<ReturnType<typeof getUserSubscriptionPlan>>;
 }
 
-const Dashboard = ({ subscriptionPlan }: PageProps) => {
+const Dashboard = () => {
   const [currentlyDeletingFile, setCurrentlyDeletingFile] = useState<
     string | null
   >(null);
@@ -187,7 +187,7 @@ const ConfirmDialog = () => {
           bg-gradient-to-r from-blue-600 via-blue-500 to-purple-500
           transition-all duration-300 group-hover:w-full"></span>
       </h3>
-        <FileUpload isSubscribed={subscriptionPlan.isSubscribed} />
+        {files && files?.length > 0 && <FileUpload />}
       </div>
 
       {/* display all user files */}
@@ -311,14 +311,7 @@ const ConfirmDialog = () => {
           <p className="text-zinc-500 dark:text-zinc-400 text-center max-w-sm">
             Let&apos;s upload your first PDF and start exploring your documents.
           </p>
-          <Button
-            onClick={() => document.getElementById("file-upload")?.click()}
-            className="mt-2 transition-all duration-300 hover:scale-105"
-            size="lg"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Upload a PDF
-          </Button>
+          <FileUpload />
         </div>
       )}
       <ConfirmDialog />

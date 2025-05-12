@@ -1,6 +1,6 @@
 "use client";
 import { useMutation } from "@tanstack/react-query";
-import { Cloud, File, Inbox, Loader2 } from "lucide-react";
+import { Cloud, File, Inbox, Loader2, Plus } from "lucide-react";
 import React, { useCallback, useState } from "react";
 import { Accept, useDropzone } from "react-dropzone";
 import axios from "axios";
@@ -21,7 +21,7 @@ import {
 } from "./ui/dialog";
 import { Button } from "./ui/button";
 
-const FileUpload = ({ isSubscribed }: { isSubscribed: boolean }) => {
+const FileUpload = () => {
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -70,8 +70,8 @@ const FileUpload = ({ isSubscribed }: { isSubscribed: boolean }) => {
     },
   });
 
-  const plan = PLANS.find((p) => p.slug === (isSubscribed ? "pro" : "free"));
-  const fileSize = plan!.fileSize || 5;
+  const plan = PLANS.find((p) => p.slug === "free");
+  const fileSize = plan!.fileSize || 5; // default to 5MB
   const fileTypes = plan!.fileTypes || { "application/pdf": [".pdf"] };
 
   const onDrop = useCallback(
@@ -203,7 +203,7 @@ const FileUpload = ({ isSubscribed }: { isSubscribed: boolean }) => {
             transition-all duration-300 ease-out group-hover:w-full opacity-20"
             />
             <span className="relative flex items-center gap-2">
-              <Cloud className="w-4 h-4 transition-transform group-hover:rotate-12" />
+              <Plus className="w-4 h-4 transition-transform group-hover:rotate-12" />
               Upload Document
             </span>
           </Button>

@@ -35,8 +35,8 @@ export default async function SignUpPage() {
     if (user) redirect("/dashboard");
 
     return (
-        <div className="flex h-screen items-center justify-center">
-            <div className="w-full max-w-md space-y-8 px-4 py-8">
+        <div className="flex mt-10 space-y-8 px-4 justify-center">
+            {/* <div className="w-full max-w-md space-y-8 px-4 py-8"> */}
                 {/* <div className="text-center">
                     <h1 className="text-2xl font-bold">Create an account</h1>
                     <p className="text-muted-foreground mt-2">
@@ -44,7 +44,7 @@ export default async function SignUpPage() {
                     </p>
                 </div> */}
                 <SignUpForm />
-            </div>
+            {/* </div> */}
         </div>
     );
 }

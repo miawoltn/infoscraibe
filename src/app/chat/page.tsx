@@ -9,16 +9,14 @@ import { getCurrentUser } from '../../lib/auth/utils';
 
 type Props = {}
 
-async function ChatsPage({}: Props) {
+async function ChatsPage() {
      const user = await getCurrentUser();
       const userId = user?.id!;
-      const isAuth = !!userId;
     if (!userId) return redirect('/sign-in');
 
-    const subscriptionPlan = await getUserSubscriptionPlan()
   return (
     <MaxWidthWrapper className='mb-12 mt-10 sm:mt-20 flex flex-col items-center justify-center text-center'>
-     <Dashboard subscriptionPlan={subscriptionPlan} />
+     <Dashboard />
      </MaxWidthWrapper>
   )
 }

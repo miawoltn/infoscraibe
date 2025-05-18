@@ -25,7 +25,7 @@ export const GettingStartedTemplate = ({ name }: GettingStartedTemplateProps) =>
             <Text style={title}>Getting Started with {APP_TITLE}</Text>
             <Text style={text}>Hi {name},</Text>
             <Text style={text}>
-              Let&apos;s help you get the most out of your 100 free credits with {APP_TITLE}. 
+              Let&apos;s help you get the most out of your 1000 free credits with {APP_TITLE}. 
               Here&apos;s a simple guide to get you started:
             </Text>
 

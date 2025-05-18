@@ -104,7 +104,7 @@ export const WelcomeTemplate = ({ name }: WelcomeTemplateProps) => {
             </Text>
 
             <Text style={callout}>
-              🎁 We've added 100 free credits to your account to help you get started!
+              🎁 We've added 1000 free credits to your account to help you get started!
             </Text>
 
             <Text style={text}>

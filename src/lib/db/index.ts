@@ -172,7 +172,7 @@ export const initializeUserCredits = async (userId: string) => {
         return await db.insert(userCredits)
             .values({
                 userId,
-                credits: '100.00',
+                credits: '1000.00',
                 reminderThreshold: '100.00'
             })
             .onConflictDoNothing() // Prevent duplicate inserts
@@ -388,3 +388,19 @@ export async function isEmailAvailable(email: string): Promise<{
 
     return { available: true };
 }
+
+export const getLastMessageByChatId = async (chatId: number) => await db.query.messages.findMany({
+    where: eq(messages.chatId, chatId),
+    orderBy: (table, { desc }) => desc(table.createdAt),
+    limit: 2
+}).then((messages) => {
+    if (messages.length === 0) return {user: null, system: null};
+    if(messages.length === 1) return {
+        system: messages[0].role === 'system' ? messages[0] : null,
+        user: messages[0].role === 'user' ? messages[0] : null
+    };
+    return {
+        system: messages[0],
+        user: messages[1]
+    };
+});

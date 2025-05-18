@@ -26,6 +26,7 @@ const ChatComponent = ({ chatId }: Props) => {
       });
       return response.data;
     },
+    staleTime: Infinity,
   });
 
   const {
@@ -36,10 +37,26 @@ const ChatComponent = ({ chatId }: Props) => {
     isLoading: isAithinking,
     setInput,
     setMessages,
+    reload,
+    error
   } = useChat({
     api: "/api/chat",
     body: { chatId },
     initialMessages: (data || []) as Message[],
+    // onResponse: (response) => {
+    // Ensure streaming messages get the isShared property
+    //  setMessages(
+    //   rawMessages.map((m) => ({
+    //      ...m,
+    //     isShared: true // Add isShared property to all messages
+    //   })
+    //   )
+    // );
+    // },
+    onFinish(message) {
+      console.log({ message })
+      updateLastMessage();
+    },
     onError: (error) => {
       toast.error(error?.message || "Unable to process chat.");
       setInput(input);
@@ -54,7 +71,39 @@ const ChatComponent = ({ chatId }: Props) => {
     isLoading: boolean;
     setInput: (input: string) => void;
     setMessages: (messages: Message[]) => void;
+    reload: () => void;
+    error: undefined | Error;
   };
+
+  // Transform messages to ensure isShared is always present
+  // const messages = React.useMemo(() => {
+  //   return rawMessages.map(msg => ({
+  //     ...msg,
+  //   }));
+  // }, [rawMessages]);
+
+  // TODO: work on updating the last message within the messages array 
+  // role returned as 'assisted'
+  const updateLastMessage = async () => {
+    try {
+      6
+      const messageResponse = await fetch(
+        `/api/chat/${chatId}/last-message`
+      );
+      console.log({ messageResponse })
+      if (messageResponse.ok) {
+        const { user, system } = await messageResponse.json();
+        console.log({ user, system })
+        console.log({ messages })
+        // update messages with setMessges with the last message from the api
+        user && messages.push(user)
+        system && messages.push(system)
+        setMessages(messages)
+      }
+    } catch (error) {
+      console.error("Error updating last message:", error);
+    }
+  }
 
   const handleRegenerate = async (messageId: string) => {
     try {
@@ -71,10 +120,10 @@ const ChatComponent = ({ chatId }: Props) => {
         messages.map((m) =>
           m.id === messageId
             ? {
-                ...m,
-                content: "", // Clear content to show loader
-                previousVersions: [...(m.previousVersions || []), m.content],
-              }
+              ...m,
+              content: "", // Clear content to show loader
+              previousVersions: [...(m.previousVersions || []), m.content],
+            }
             : m
         )
       );
@@ -122,10 +171,10 @@ const ChatComponent = ({ chatId }: Props) => {
           messages.map((m) =>
             m.id === messageId
               ? {
-                  ...m,
-                  content: currentContent,
-                  previousVersions: currentVersions,
-                }
+                ...m,
+                content: currentContent,
+                previousVersions: currentVersions,
+              }
               : m
           )
         );
@@ -149,8 +198,8 @@ const ChatComponent = ({ chatId }: Props) => {
                 messages.map((m) =>
                   m.id === messageId
                     ? {
-                        ...message,
-                      }
+                      ...message,
+                    }
                     : m
                 )
               );
@@ -168,10 +217,10 @@ const ChatComponent = ({ chatId }: Props) => {
               messages.map((m) =>
                 m.id === messageId
                   ? {
-                      ...m,
-                      content,
-                      previousVersions: [...currentVersions, currentContent],
-                    }
+                    ...m,
+                    content,
+                    previousVersions: [...currentVersions, currentContent],
+                  }
                   : m
               )
             );
@@ -183,10 +232,10 @@ const ChatComponent = ({ chatId }: Props) => {
             messages.map((m) =>
               m.id === messageId
                 ? {
-                    ...m,
-                    content: currentContent,
-                    previousVersions: currentVersions,
-                  }
+                  ...m,
+                  content: currentContent,
+                  previousVersions: currentVersions,
+                }
                 : m
             )
           );
@@ -295,6 +344,7 @@ const ChatComponent = ({ chatId }: Props) => {
           regeneratingId={regeneratingId}
           onDeleteVersion={handleDeleteVersion}
           onFeedback={handleFeedback}
+          isShared={true} // Set default to true since all messages should have actions
         />
       </div>
 

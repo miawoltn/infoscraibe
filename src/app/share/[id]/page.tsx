@@ -4,6 +4,7 @@ import MessageList from "@/components/MessageList";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
+import { ScrollArea } from "../../../components/ui/scroll-area";
 
 export default function SharedChat({
   params: { id },
@@ -11,7 +12,7 @@ export default function SharedChat({
   params: { id: string };
 }) {
 
- console.log({id})
+  console.log({ id })
   const { data, isLoading, isError } = useQuery({
     queryKey: ['shared-chat', id],
     queryFn: async () => {
@@ -57,7 +58,9 @@ export default function SharedChat({
           Shared on {new Date(data.createdAt).toLocaleDateString()}
         </p>
       </div>
-      <MessageList messages={data.messages} isLoading={false} isShared={false} />
+      <ScrollArea className="h-[calc(100vh-10rem)] scroll-m-0">
+        <MessageList messages={data.messages} isLoading={false} isShared={false} />
+      </ScrollArea>
     </div>
   );
 }

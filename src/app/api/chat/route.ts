@@ -122,7 +122,10 @@ export const POST = protectRoute(async (req: Request, user) => {
                     chatId,
                     tokenCount: actualTokenCount
                 });
-            }
+            },
+            onFinal(completion) {
+                console.log('Final completion:', completion);
+            },
         });
         return new StreamingTextResponse(stream);
     } catch (error) {

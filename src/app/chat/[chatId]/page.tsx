@@ -106,9 +106,9 @@ const ChatPage = ({ params: { chatId } }: Props) => {
     }
 
     return (
-        <div className='flex flex-col h-[calc(100vh-3.5rem)]'>
+        <div className='flex flex-col h-[calc(100vh)]'>
         {/* Header with back button */}
-        <div className="h-12 sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-700 bg-white/75 dark:bg-gray-900/75 backdrop-blur-sm">
+        <div className="h-14 sm:h-12 sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-700 bg-white/75 dark:bg-gray-900/75 backdrop-blur-sm">
             <div className="flex items-center h-12 px-4">
                 <Link 
                     href="/dashboard"
@@ -119,7 +119,7 @@ const ChatPage = ({ params: { chatId } }: Props) => {
                 </Link>
             </div>
         </div>
-        <div className='flex flex-col md:flex-row flex-1 h-[calc(100vh-3.5rem-3rem)]'>
+        <div className='flex flex-col md:flex-row flex-1 h-[calc(100vh-3.5rem)]'>
         {/* PDF Toggle Button - Only visible on mobile */}
         <Button
             onClick={() => setShowPDF(!showPDF)}
@@ -155,7 +155,7 @@ const ChatPage = ({ params: { chatId } }: Props) => {
         )}
 
         {/* Chat Component - Main view */}
-        <div className='w-full md:w-2/3 h-[calc(100vh-3.5rem-3rem)] border-l border-gray-200 dark:border-gray-600 relative'>
+        <div className='w-full md:w-2/3 h-[calc(100vh-3.5rem-3rem)] xl:lg:md:border-l border-gray-200 dark:border-gray-600 relative'>
             <ChatComponent chatId={Number(id)} />
         </div>
     </div>

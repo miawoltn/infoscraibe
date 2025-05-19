@@ -75,6 +75,7 @@ const MessageInput = ({
             "max-h-24 lg:max-h-36 xl:max-h-48 flex-grow flex-shrink",
           )}
           placeholder="Ask a question..."
+          maxRows={4} // Limit max rows on mobile
         />
 
         <button

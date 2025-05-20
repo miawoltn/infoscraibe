@@ -161,5 +161,5 @@ export async function getUploadUrl(fileName: string) {
         ContentType: fileType
     });
 
-  return await getSignedUrl(client, command, { expiresIn: 60 });
+  return await getSignedUrl(client, command, { expiresIn: parseInt(process.env.UPLOAD_URL_EXPIRY || '300') });
 }

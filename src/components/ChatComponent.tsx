@@ -331,11 +331,11 @@ const ChatComponent = ({ chatId }: Props) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-background relative">
+    <div className="flex flex-col h-[100dvh] xl:lg:md:h-full bg-white dark:bg-background relative">
       {/* Message container with proper padding and scroll containment */}
       <div
         id="message-container"
-        className="flex-1 overflow-y-auto pb-32 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700"
+        className="flex-1 overflow-y-auto lg:md:xl:pb-32 pb-48 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700"
       >
         <MessageList
           messages={messages}
@@ -349,10 +349,10 @@ const ChatComponent = ({ chatId }: Props) => {
       </div>
 
       {/* Gradient overlay to fade content under input */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white dark:from-background to-transparent pointer-events-none" />
+      <div className="lg:md:xl:absolute fixed bottom-0 left-0 right-0 lg:md:xl:h-32 h-40 bg-gradient-to-t from-white dark:from-background to-transparent pointer-events-none" />
 
       {/* Input container with fixed positioning */}
-      <div className="absolute bottom-0 left-0 right-0">
+      <div className="lg:md:xl:absolute fixed bottom-0 left-0 right-0">
         <MessageInput
           isAiThinking={isAithinking}
           loading={isAithinking}

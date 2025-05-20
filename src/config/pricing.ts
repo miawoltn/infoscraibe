@@ -15,8 +15,8 @@ export const PLANS = [
        "application/pdf": [".pdf"],
        "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
        [".docx"],
-     "application/msword": [".doc"],
-     "text/plain": [".txt"]
+    //  "application/msword": [".doc"],
+    //  "text/plain": [".txt"]
       }
     },
     {
@@ -36,8 +36,8 @@ export const PLANS = [
         "application/pdf": [".pdf"],
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
           [".docx"],
-        "application/msword": [".doc"],
-        "text/plain": [".txt"]
+        // "application/msword": [".doc"],
+        // "text/plain": [".txt"]
       }
     },
   ]

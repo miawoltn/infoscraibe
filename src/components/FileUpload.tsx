@@ -32,6 +32,7 @@ const FileUpload = () => {
   const [fileKey, setFileKey] = useState("");
   const [isAbortFileCreation, setAbort] = useState(false);
   const [acceptedFiles, setAcceptedFiles] = useState<File[]>([]);
+  const [processingError, setProcessingError] = useState<string | null>(null);
   const {
     mutate,
     isPending,
@@ -56,6 +57,14 @@ const FileUpload = () => {
       });
       return data;
     },
+    onError: (error: any) => {
+      console.log(error);
+      setUploading(false);
+      setProcessingError(
+        error?.response?.data?.error ||
+        "Failed to process document. Please try again."
+      );
+    },
   });
   const {
     mutate: deleteChat,
@@ -76,6 +85,7 @@ const FileUpload = () => {
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
+      setProcessingError(null); // Reset error state
       setAbort(false);
       setAcceptedFiles([...acceptedFiles]);
       const file = acceptedFiles[0];
@@ -97,7 +107,9 @@ const FileUpload = () => {
         // const data = await uploadToS3({ file, fileExtension: fileExtension ?? '' }, setProgress, abortUpload)
         const data = await uploadFileToS3(file, setProgress, abortUpload2);
         if (!data) {
-          toast.error("Error while uploading file. Try again");
+          setProcessingError("Error uploading file. Please try again.");
+          setUploading(false);
+          // toast.error("Error while uploading file. Try again");
           return;
         }
         setFileKey(data.fileKey);
@@ -110,27 +122,54 @@ const FileUpload = () => {
                 router.push(`/chat/${id}:${checksum}`);
               }
             },
-            onError: (error) => {
-              setUploading(false);
+            onError: (error: any) => {
               console.log(error);
-              if (!isAbortFileCreation) {
-                toast.error("Error creating chat");
+              setUploading(false);
+              setProcessingError(
+                error?.response?.data?.error ||
+                "Failed to process document. Please try again."
+              );
+
+              if (fileKey) {
+                deleteChat({ fileKey }, {
+                  onSettled: () => {
+                    setFileKey("");
+                    setProgress(0);
+                  }
+                });
               }
+              // if (!isAbortFileCreation) {
+              //   toast.error("Error creating chat");
+              // }
             },
           }
         );
       } catch (error) {
         console.log(error);
-        toast.error("Error uploading file");
+         setUploading(false);
+        setProcessingError("Something went wrong. Please try again.");
+        // toast.error("Error uploading file");
       }
     },
     [acceptedFiles]
   );
 
+  // const onRejected = useCallback()
+
   const { getRootProps, getInputProps, inputRef } = useDropzone({
     accept: fileTypes as Accept,
     maxFiles: 1,
     onDrop,
+    onDropRejected: (fileRejections) => {
+      const error = fileRejections[0]?.errors[0];
+      if (error?.code === 'file-invalid-type') {
+        toast.error('Please upload a PDF or Word document');
+      } else if (error?.code === 'too-many-files') {
+        toast.error('Please upload only one file');
+      } else {
+        toast.error('Error uploading file. Please try again.');
+      }
+    },
   });
 
   const abortUpload = async (upload: Upload) => {
@@ -172,7 +211,7 @@ const FileUpload = () => {
             }
           );
         }
-      } catch (err) {}
+      } catch (err) { }
       setIsOpen(false);
     }
     setShowAlert(false);
@@ -195,7 +234,7 @@ const FileUpload = () => {
       >
         <DialogTrigger onClick={() => setIsOpen(true)} asChild>
           <Button
-            className="relative group overflow-hidden transform transition-all duration-200 
+            className="relative group overflow-auto transform transition-all duration-200 
         hover:scale-105 active:scale-95 hover:shadow-lg"
           >
             <div
@@ -240,14 +279,32 @@ const FileUpload = () => {
                       className={cn(
                         "w-[100%] h-2 mt-1 mb-1 bg-zinc-200 dark:bg-slate-900",
                         {
-                          "bg-green-500": progress === 100,
+                          "bg-green-500": progress === 100 && !processingError,
+                          "bg-red-500": processingError
                         }
                       )}
                     />
-                    {progress === 100 ? (
+                    { processingError ? (
+                      <div className="flex flex-col gap-2 items-center justify-center mt-2">
+                        <p className="text-sm text-red-500">{processingError}</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProcessingError(null);
+                            setProgress(0);
+                            setUploading(false);
+                            setAcceptedFiles([]);
+                          }}
+                        >
+                          Try Again
+                        </Button>
+                      </div>
+                    ) : progress === 100 ? (
                       <div className="flex gap-1 items-center justify-center text-sm text-zinc-700 dark:text-zinc-200 text-center pt-2">
                         <Loader2 className="h-3 w-3 animate-spin" />
-                        Redirecting...
+                        Processing document...
                       </div>
                     ) : (
                       <small>{progress}%</small>

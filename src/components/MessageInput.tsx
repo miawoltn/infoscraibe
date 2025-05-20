@@ -1,17 +1,19 @@
 import { cn } from '@/lib/utils';
-import { ArrowUp, Loader2, SendHorizonal } from 'lucide-react';
+import { ArrowUp, Loader2, SendHorizonal, StopCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 
 const MessageInput = ({
   handleInputChange,
   handleSubmit,
+  handleStop,
   loading = false,
   isAiThinking,
   message
 }: {
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  handleStop?: () => void;
   loading: boolean;
   isAiThinking: boolean,
   message: string;
@@ -36,16 +38,20 @@ const MessageInput = ({
        <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 dark:text-gray-300 
          bg-white/80 dark:bg-gray-800/80 rounded-full shadow-lg backdrop-blur-sm">
          <Loader2 className="w-4 h-4 animate-spin" />
-         AI is thinking...
+         Generating response...
        </div>
      </div>
       )}
 
       <form
         onSubmit={(e) => {
-          if (loading) return;
+          if (loading && !handleStop) return;
           e.preventDefault();
-          handleSubmit(e);
+          if (loading && handleStop) {
+            handleStop();
+          } else {
+            handleSubmit(e);
+          }
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey && !loading) {
@@ -74,12 +80,13 @@ const MessageInput = ({
             "resize-none focus:outline-none w-full px-4",
             "max-h-24 lg:max-h-36 xl:max-h-48 flex-grow flex-shrink",
           )}
-          placeholder="Ask a question..."
+          placeholder={loading ? "Generating..." : "Ask a question..."}
           maxRows={4} // Limit max rows on mobile
+          disabled={loading}
         />
 
         <button
-          disabled={message.trim().length === 0 || loading}
+          disabled={!loading && message.trim().length === 0}
           className={cn(
             "flex items-center justify-center",
             "w-10 h-10 rounded-full transition-all duration-200",
@@ -91,7 +98,7 @@ const MessageInput = ({
           type="submit"
         >
           {loading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <StopCircle className="w-5 h-5" />
           ) : (
             <SendHorizonal className="w-5 h-5" />
           )}

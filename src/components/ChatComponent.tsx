@@ -17,7 +17,7 @@ const ChatComponent = ({ chatId }: Props) => {
   const [textareaRows, setTextareaRows] = useState(1);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
-
+  const [isGenerating, setIsGenerating] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ["chat", chatId],
     queryFn: async () => {
@@ -38,6 +38,7 @@ const ChatComponent = ({ chatId }: Props) => {
     setInput,
     setMessages,
     reload,
+    stop,
     error
   } = useChat({
     api: "/api/chat",
@@ -56,10 +57,12 @@ const ChatComponent = ({ chatId }: Props) => {
     onFinish(message) {
       console.log({ message })
       updateLastMessage();
+      setIsGenerating(false);
     },
     onError: (error) => {
       toast.error(error?.message || "Unable to process chat.");
       setInput(input);
+      setIsGenerating(false);
     },
   }) as {
     input: string;
@@ -72,18 +75,30 @@ const ChatComponent = ({ chatId }: Props) => {
     setInput: (input: string) => void;
     setMessages: (messages: Message[]) => void;
     reload: () => void;
+    stop: () => void;
     error: undefined | Error;
   };
 
-  // Transform messages to ensure isShared is always present
-  // const messages = React.useMemo(() => {
-  //   return rawMessages.map(msg => ({
-  //     ...msg,
-  //   }));
-  // }, [rawMessages]);
+    useEffect(() => {
+    if (shouldScrollToBottom && !regeneratingId) {
+      const messageContainer = document.getElementById("message-container");
+      if (messageContainer) {
+        messageContainer.scrollTo({
+          top: messageContainer.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [messages, shouldScrollToBottom, regeneratingId]);
 
-  // TODO: work on updating the last message within the messages array 
-  // role returned as 'assisted'
+  useEffect(() => {
+    if (textareaRows >= 2 && input && mode === "single") {
+      setMode("multi");
+    } else if (!input && mode === "multi") {
+      setMode("single");
+    }
+  }, [textareaRows, mode, input]);
+
   const updateLastMessage = async () => {
     try {
       6
@@ -301,33 +316,20 @@ const ChatComponent = ({ chatId }: Props) => {
     }
   };
 
-  useEffect(() => {
-    if (shouldScrollToBottom && !regeneratingId) {
-      const messageContainer = document.getElementById("message-container");
-      if (messageContainer) {
-        messageContainer.scrollTo({
-          top: messageContainer.scrollHeight,
-          behavior: "smooth",
-        });
-      }
-    }
-  }, [messages, shouldScrollToBottom, regeneratingId]);
-
-  useEffect(() => {
-    if (textareaRows >= 2 && input && mode === "single") {
-      setMode("multi");
-    } else if (!input && mode === "multi") {
-      setMode("single");
-    }
-  }, [textareaRows, mode, input]);
-
   const isButtonDisabled =
     (isLoading && !data) || isAithinking || !input.trim();
 
   // Reset scroll behavior when sending new messages
   const handleMessageSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     setShouldScrollToBottom(true);
+    setIsGenerating(true);
     handleSubmit(e);
+  };
+
+  const handleStopGeneration = () => {
+    stop();
+    setIsGenerating(false);
+    toast.success("Message generation stopped");
   };
 
   return (
@@ -355,10 +357,11 @@ const ChatComponent = ({ chatId }: Props) => {
       <div className="lg:md:xl:absolute fixed bottom-0 left-0 right-0">
         <MessageInput
           isAiThinking={isAithinking}
-          loading={isAithinking}
+          loading={isGenerating}
           message={input}
           handleSubmit={handleMessageSubmit}
           handleInputChange={handleInputChange}
+          handleStop={handleStopGeneration}
         />
       </div>
     </div>

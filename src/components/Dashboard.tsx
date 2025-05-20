@@ -191,7 +191,7 @@ const ConfirmDialog = () => {
       </div>
 
       {/* display all user files */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-10 mb-10">
+      <div className="flex-1 overflow-y-auto p-4 md:p-10 mb-28">
       {files && files?.length !== 0 ? (
         <ul className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {files

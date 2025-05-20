@@ -335,7 +335,7 @@ const ChatComponent = ({ chatId }: Props) => {
       {/* Message container with proper padding and scroll containment */}
       <div
         id="message-container"
-        className="flex-1 overflow-y-auto lg:md:xl:pb-32 pb-40 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700"
+        className="flex-1 overflow-y-auto lg:md:xl:pb-32 pb-48 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700"
       >
         <MessageList
           messages={messages}

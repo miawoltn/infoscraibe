@@ -20,7 +20,7 @@ type Props = {
 }
 
 const ChatPage = ({ params: { chatId } }: Props) => {
-    const { user, isSignedIn, isLoading: isUserLoading } = useAuth();
+    // const { user, isSignedIn, isLoading: isUserLoading } = useAuth();
 
     const [id, checksum] = decodeURIComponent(chatId).split(':')
     const [showPDF, setShowPDF] = useState(false);
@@ -39,11 +39,11 @@ const ChatPage = ({ params: { chatId } }: Props) => {
     //     return <Skeleton className='m-5 h-60 w-full' />
     // }
 
-    if(!isSignedIn && !isUserLoading) {
-        return redirect('/sign-in'); 
-    }
+    // if(!isSignedIn && !isUserLoading) {
+    //     return redirect('/sign-in'); 
+    // }
 
-    if(isLoading || isUserLoading) {
+    if(isLoading /*|| isUserLoading*/) {
         return (
             <div className='flex flex-col md:flex-row'>
                 {/* PDF Viewer Skeleton */}
@@ -106,7 +106,7 @@ const ChatPage = ({ params: { chatId } }: Props) => {
     }
 
     return (
-        <div className='flex flex-col h-[calc(100vh)]'>
+        <div className='flex flex-col'>
         {/* Header with back button */}
         <div className="h-14 sm:h-12 sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-700 bg-white/75 dark:bg-gray-900/75 backdrop-blur-sm">
             <div className="flex items-center h-12 px-4">
